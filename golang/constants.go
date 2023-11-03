@@ -1,0 +1,3 @@
+package abi
+
+const partsSeparator = "@"
