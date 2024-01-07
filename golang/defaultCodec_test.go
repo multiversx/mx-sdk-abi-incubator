@@ -25,6 +25,22 @@ func TestCodec_DecodeNested_Primitives(t *testing.T) {
 	testDecodeNested(t, "4142", &U16Value{}, &U16Value{Value: 0x4142})
 	testDecodeNested(t, "41424344", &U32Value{}, &U32Value{Value: 0x41424344})
 	testDecodeNested(t, "4142434445464748", &U64Value{}, &U64Value{Value: 0x4142434445464748})
+
+	testDecodeNestedWithError(t, "01", &U16Value{}, "cannot read 2 bytes")
+	testDecodeNestedWithError(t, "4142", &U32Value{}, "cannot read 4 bytes")
+	testDecodeNestedWithError(t, "41424344", &U64Value{}, "cannot read 8 bytes")
+}
+
+func TestCodec_DecodeTopLevel_Primitives(t *testing.T) {
+	testDecodeTopLevel(t, "01", &U8Value{}, &U8Value{Value: 0x01})
+	testDecodeTopLevel(t, "02", &U16Value{}, &U16Value{Value: 0x0002})
+	testDecodeTopLevel(t, "03", &U32Value{}, &U32Value{Value: 0x00000003})
+	testDecodeTopLevel(t, "04", &U64Value{}, &U64Value{Value: 0x0000000000000004})
+
+	testDecodeTopLevelWithError(t, "4142", &U8Value{}, "decoded value is too large")
+	testDecodeTopLevelWithError(t, "41424344", &U16Value{}, "decoded value is too large")
+	testDecodeTopLevelWithError(t, "4142434445464748", &U32Value{}, "decoded value is too large")
+	testDecodeTopLevelWithError(t, "41424344454647489876", &U64Value{}, "decoded value is too large")
 }
 
 func TestCodec_EncodeNested_Structures(t *testing.T) {
@@ -70,4 +86,34 @@ func testDecodeNested(t *testing.T, encoded string, destination interface{}, exp
 	err = codec.DecodeNested(reader, destination)
 	require.NoError(t, err)
 	require.Equal(t, expected, destination)
+}
+
+func testDecodeNestedWithError(t *testing.T, encoded string, destination interface{}, expectedErrorMessage string) {
+	codec := NewDefaultCodec()
+	reader, err := NewDefaultDataReaderFromString(encoded)
+	require.NoError(t, err)
+
+	err = codec.DecodeNested(reader, destination)
+	require.ErrorContains(t, err, expectedErrorMessage)
+	require.Empty(t, destination)
+}
+
+func testDecodeTopLevel(t *testing.T, encoded string, destination interface{}, expected interface{}) {
+	codec := NewDefaultCodec()
+	reader, err := NewDefaultDataReaderFromString(encoded)
+	require.NoError(t, err)
+
+	err = codec.DecodeTopLevel(reader, destination)
+	require.NoError(t, err)
+	require.Equal(t, expected, destination)
+}
+
+func testDecodeTopLevelWithError(t *testing.T, encoded string, destination interface{}, expectedErrorMessage string) {
+	codec := NewDefaultCodec()
+	reader, err := NewDefaultDataReaderFromString(encoded)
+	require.NoError(t, err)
+
+	err = codec.DecodeTopLevel(reader, destination)
+	require.ErrorContains(t, err, expectedErrorMessage)
+	require.Empty(t, destination)
 }
