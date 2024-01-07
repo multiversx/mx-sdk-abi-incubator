@@ -75,7 +75,7 @@ func (s *serializer) serializeCompositeValue(writer dataWriter, value CompositeV
 
 func (s *serializer) serializeInputVariadicValues(writer dataWriter, value InputVariadicValues) error {
 	for _, item := range value.Items {
-		err := s.serializeDirectlyEncodableValue(writer, item)
+		err := s.Serialize(writer, []interface{}{item})
 		if err != nil {
 			return err
 		}

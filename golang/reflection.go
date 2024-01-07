@@ -5,7 +5,8 @@ import "reflect"
 func deepClone(src interface{}) interface{} {
 	srcValue := reflect.ValueOf(src)
 	if srcValue.Kind() != reflect.Struct {
-		return src // If it's not a struct, return as is
+		// If it's not a struct, return as is
+		return src
 	}
 
 	// Create a new instance of the same type as the source
