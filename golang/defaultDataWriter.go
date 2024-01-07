@@ -17,7 +17,7 @@ func NewDefaultDataWriter() *defaultDataWriter {
 
 func (d *defaultDataWriter) Write(data []byte) error {
 	if len(d.parts) == 0 {
-		return errNoDataPart
+		return errWriterCannotWriteSinceThereIsNoPart
 	}
 
 	partIndex := len(d.parts) - 1

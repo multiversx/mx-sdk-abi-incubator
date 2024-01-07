@@ -39,7 +39,7 @@ func (d *defaultDataReader) Read(numBytes int) ([]byte, error) {
 	part := d.parts[d.partIndex]
 
 	if d.offsetInPart+numBytes > len(part) {
-		return nil, errUnexpectedEndOfData
+		return nil, newErrReaderCannotReadDueToEndOfData(numBytes, d.offsetInPart, d.partIndex)
 	}
 
 	data := part[d.offsetInPart : d.offsetInPart+numBytes]
@@ -50,7 +50,7 @@ func (d *defaultDataReader) Read(numBytes int) ([]byte, error) {
 
 func (d *defaultDataReader) ReadWholePart() ([]byte, error) {
 	if d.offsetInPart != 0 {
-		return nil, errOffsetIsNotAtStartOfPart
+		return nil, newErrReaderCannotReadWholePartDueToNonZeroOffset(d.partIndex, d.offsetInPart)
 	}
 
 	part := d.parts[d.partIndex]
@@ -64,8 +64,11 @@ func (d *defaultDataReader) HasNextPart() bool {
 }
 
 func (d *defaultDataReader) GotoNextPart() error {
-	if d.offsetInPart != len(d.parts[d.partIndex]) {
-		return errUnreadDataInPart
+	lengthOfCurrentPart := len(d.parts[d.partIndex])
+	numUnreadBytes := lengthOfCurrentPart - d.offsetInPart
+
+	if numUnreadBytes > 0 {
+		return newErrReaderCannotGotoNextPartDueToUnreadDataInCurrentPart(numUnreadBytes, d.partIndex, lengthOfCurrentPart)
 	}
 
 	d.partIndex++
