@@ -5,8 +5,10 @@ import (
 	"fmt"
 )
 
+var errNilInputValue = errors.New("nil input value")
+var errNilOutputValue = errors.New("nil output value")
+var errNilItemCreator = errors.New("nil item creator")
 var errWriterCannotWriteSinceThereIsNoPart = errors.New("cannot write, since there is no part to write to")
-
 var errVariadicMustBeLast = errors.New("variadic must be last")
 
 func newErrReaderCannotReadDueToEndOfData(numBytes int, offsetInPart int, partIndex int) error {
@@ -23,6 +25,13 @@ func newErrReaderCannotReadWholePartDueToNonZeroOffset(partIndex, offsetInPart i
 		"cannot wholly read part %d, since current reading offset (%d) is not zero",
 		partIndex,
 		offsetInPart,
+	)
+}
+
+func newErrReaderCannotReadWholePartDueToEndOfData(partIndex int) error {
+	return fmt.Errorf(
+		"cannot wholly read part %d: unexpected end of data",
+		partIndex,
 	)
 }
 

@@ -3,7 +3,7 @@ package abi
 type dataReader interface {
 	Read(numBytes int) ([]byte, error)
 	ReadWholePart() ([]byte, error)
-	HasNextPart() bool
+	HasUnreadData() bool
 	GotoNextPart() error
 }
 

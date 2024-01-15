@@ -201,6 +201,53 @@ func TestSerializer_DeserializeCompositeValue(t *testing.T) {
 	)
 }
 
+func TestSerializer_DeserializeOutputVariadicValues(t *testing.T) {
+	t.Run("nil destination", func(t *testing.T) {
+		serializer, reader := setupDeserializeTest(t, "")
+
+		err := serializer.Deserialize(reader, []interface{}{nil})
+		require.ErrorIs(t, err, errNilOutputValue)
+	})
+
+	t.Run("nil item creator", func(t *testing.T) {
+		serializer, reader := setupDeserializeTest(t, "")
+		destination := &OutputVariadicValues{
+			Items: []interface{}{},
+		}
+
+		err := serializer.Deserialize(reader, []interface{}{destination})
+		require.ErrorIs(t, err, errNilItemCreator)
+	})
+
+	t.Run("empty", func(t *testing.T) {
+		serializer, reader := setupDeserializeTest(t, "")
+		destination := &OutputVariadicValues{
+			Items:       []interface{}{},
+			ItemCreator: func() interface{} { return struct{}{} },
+		}
+
+		err := serializer.Deserialize(reader, []interface{}{destination})
+		require.NoError(t, err)
+	})
+
+	t.Run("variadic primitives (1)", func(t *testing.T) {
+		serializer, reader := setupDeserializeTest(t, "2A@2B@2C")
+		destination := &OutputVariadicValues{
+			Items:       []interface{}{},
+			ItemCreator: func() interface{} { return &U8Value{} },
+		}
+
+		err := serializer.Deserialize(reader, []interface{}{destination})
+		require.NoError(t, err)
+
+		require.Equal(t, []interface{}{
+			&U8Value{Value: 42},
+			&U8Value{Value: 43},
+			&U8Value{Value: 44},
+		}, destination.Items)
+	})
+}
+
 func testSerialize(t *testing.T, values []interface{}, expected string) {
 	serializer := NewSerializer(NewDefaultCodec())
 	writer := NewDefaultDataWriter()
@@ -218,4 +265,12 @@ func testDeserialize(t *testing.T, encoded string, destination []interface{}, ex
 	err = serializer.Deserialize(reader, destination)
 	require.NoError(t, err)
 	require.Equal(t, expected, destination)
+}
+
+func setupDeserializeTest(t *testing.T, serializedInput string) (*serializer, *defaultDataReader) {
+	serializer := NewSerializer(NewDefaultCodec())
+	reader, err := NewDefaultDataReaderFromString(serializedInput)
+	require.NoError(t, err)
+
+	return serializer, reader
 }

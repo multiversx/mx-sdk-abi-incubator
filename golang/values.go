@@ -66,8 +66,8 @@ type InputListValue struct {
 }
 
 type OutputListValue struct {
-	Items         []interface{}
-	ItemPrototype interface{}
+	Items       []interface{}
+	ItemCreator func() interface{}
 }
 
 type CompositeValue struct {
@@ -79,8 +79,8 @@ type InputVariadicValues struct {
 }
 
 type OutputVariadicValues struct {
-	Items         []interface{}
-	ItemPrototype interface{}
+	Items       []interface{}
+	ItemCreator func() interface{}
 }
 
 type OptionalValue struct {

@@ -10,15 +10,19 @@ func NewSerializer(codec codec) *serializer {
 	}
 }
 
-func (s *serializer) Serialize(writer dataWriter, values []interface{}) error {
+func (s *serializer) Serialize(writer dataWriter, inputValues []interface{}) error {
 	var err error
 
-	for i, value := range values {
+	for i, value := range inputValues {
+		if value == nil {
+			return errNilInputValue
+		}
+
 		switch value.(type) {
 		case CompositeValue:
 			err = s.serializeCompositeValue(writer, value.(CompositeValue))
 		case InputVariadicValues:
-			if i != len(values)-1 {
+			if i != len(inputValues)-1 {
 				return errVariadicMustBeLast
 			}
 
@@ -35,15 +39,19 @@ func (s *serializer) Serialize(writer dataWriter, values []interface{}) error {
 	return nil
 }
 
-func (s *serializer) Deserialize(reader dataReader, values []interface{}) error {
+func (s *serializer) Deserialize(reader dataReader, outputValues []interface{}) error {
 	var err error
 
-	for i, value := range values {
+	for i, value := range outputValues {
+		if value == nil {
+			return errNilOutputValue
+		}
+
 		switch value.(type) {
 		case *CompositeValue:
 			err = s.deserializeCompositeValue(reader, value.(*CompositeValue))
 		case *OutputVariadicValues:
-			if i != len(values)-1 {
+			if i != len(outputValues)-1 {
 				return errVariadicMustBeLast
 			}
 
@@ -107,8 +115,12 @@ func (s *serializer) deserializeCompositeValue(reader dataReader, value *Composi
 }
 
 func (s *serializer) deserializeOutputVariadicValues(reader dataReader, value *OutputVariadicValues) error {
-	for reader.HasNextPart() {
-		newItem := deepClone(value.ItemPrototype)
+	if value.ItemCreator == nil {
+		return errNilItemCreator
+	}
+
+	for reader.HasUnreadData() {
+		newItem := value.ItemCreator()
 
 		err := s.Deserialize(reader, []interface{}{newItem})
 		if err != nil {
@@ -116,15 +128,6 @@ func (s *serializer) deserializeOutputVariadicValues(reader dataReader, value *O
 		}
 
 		value.Items = append(value.Items, newItem)
-
-		if !reader.HasNextPart() {
-			break
-		}
-
-		err = reader.GotoNextPart()
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
