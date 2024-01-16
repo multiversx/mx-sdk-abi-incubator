@@ -51,8 +51,8 @@ func newErrReaderCannotGotoNextPartDueToEndOfData(currentPartIndex int) error {
 	)
 }
 
-func newErrUnsupportedType(value interface{}) error {
-	return fmt.Errorf("unsupported type: %T", value)
+func newErrUnsupportedType(when string, value interface{}) error {
+	return fmt.Errorf("%s, unsupported type: %T", when, value)
 }
 
 func newErrCodecCannotDecodeType(typeAlias string, originalError error) error {

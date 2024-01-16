@@ -64,6 +64,53 @@ func TestCodec_EncodeNested(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, "014142", writer.String())
 	})
+
+	t.Run("enum (discriminant == 0)", func(t *testing.T) {
+		writer := NewDefaultDataWriter()
+		writer.GotoNextPart()
+
+		fooEnum := EnumValue{
+			Discriminant: 0,
+		}
+
+		err := codec.EncodeNested(writer, fooEnum)
+		require.NoError(t, err)
+		require.Equal(t, "00", writer.String())
+	})
+
+	t.Run("enum (discriminant != 0)", func(t *testing.T) {
+		writer := NewDefaultDataWriter()
+		writer.GotoNextPart()
+
+		fooEnum := EnumValue{
+			Discriminant: 42,
+		}
+
+		err := codec.EncodeNested(writer, fooEnum)
+		require.NoError(t, err)
+		require.Equal(t, "2a", writer.String())
+	})
+
+	t.Run("enum with fields", func(t *testing.T) {
+		writer := NewDefaultDataWriter()
+		writer.GotoNextPart()
+
+		fooEnum := EnumValue{
+			Discriminant: 42,
+			Fields: []Field{
+				{
+					Value: U8Value{Value: 0x01},
+				},
+				{
+					Value: U16Value{Value: 0x4142},
+				},
+			},
+		}
+
+		err := codec.EncodeNested(writer, fooEnum)
+		require.NoError(t, err)
+		require.Equal(t, "2a014142", writer.String())
+	})
 }
 
 func TestCodec_EncodeTopLevel(t *testing.T) {
@@ -112,6 +159,73 @@ func TestCodec_EncodeTopLevel(t *testing.T) {
 		err := codec.EncodeTopLevel(writer, U64Value{Value: 0x0042434445464748})
 		require.NoError(t, err)
 		require.Equal(t, "42434445464748", writer.String())
+	})
+
+	t.Run("struct", func(t *testing.T) {
+		writer := NewDefaultDataWriter()
+		writer.GotoNextPart()
+
+		fooStruct := StructValue{
+			Fields: []Field{
+				{
+					Value: U8Value{Value: 0x01},
+				},
+				{
+					Value: U16Value{Value: 0x4142},
+				},
+			},
+		}
+
+		err := codec.EncodeTopLevel(writer, fooStruct)
+		require.NoError(t, err)
+		require.Equal(t, "014142", writer.String())
+	})
+
+	t.Run("enum (discriminant == 0)", func(t *testing.T) {
+		writer := NewDefaultDataWriter()
+		writer.GotoNextPart()
+
+		fooEnum := EnumValue{
+			Discriminant: 0,
+		}
+
+		err := codec.EncodeTopLevel(writer, fooEnum)
+		require.NoError(t, err)
+		require.Equal(t, "", writer.String())
+	})
+
+	t.Run("enum (discriminant != 0)", func(t *testing.T) {
+		writer := NewDefaultDataWriter()
+		writer.GotoNextPart()
+
+		fooEnum := EnumValue{
+			Discriminant: 42,
+		}
+
+		err := codec.EncodeTopLevel(writer, fooEnum)
+		require.NoError(t, err)
+		require.Equal(t, "2a", writer.String())
+	})
+
+	t.Run("enum with fields", func(t *testing.T) {
+		writer := NewDefaultDataWriter()
+		writer.GotoNextPart()
+
+		fooEnum := EnumValue{
+			Discriminant: 42,
+			Fields: []Field{
+				{
+					Value: U8Value{Value: 0x01},
+				},
+				{
+					Value: U16Value{Value: 0x4142},
+				},
+			},
+		}
+
+		err := codec.EncodeTopLevel(writer, fooEnum)
+		require.NoError(t, err)
+		require.Equal(t, "2a014142", writer.String())
 	})
 }
 
@@ -176,6 +290,34 @@ func TestCodec_DecodeNested(t *testing.T) {
 
 		err := codec.DecodeNested(reader, destination)
 		require.ErrorContains(t, err, "cannot read 8 bytes")
+	})
+
+	t.Run("struct", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("014142")
+
+		destination := &StructValue{
+			Fields: []Field{
+				{
+					Value: &U8Value{},
+				},
+				{
+					Value: &U16Value{},
+				},
+			},
+		}
+
+		err := codec.DecodeNested(reader, destination)
+		require.NoError(t, err)
+		require.Equal(t, &StructValue{
+			Fields: []Field{
+				{
+					Value: &U8Value{Value: 0x01},
+				},
+				{
+					Value: &U16Value{Value: 0x4142},
+				},
+			},
+		}, destination)
 	})
 }
 
@@ -248,5 +390,33 @@ func TestCodec_DecodeTopLevel(t *testing.T) {
 
 		err := codec.DecodeTopLevel(reader, destination)
 		require.ErrorContains(t, err, "decoded value is too large")
+	})
+
+	t.Run("struct", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("014142")
+
+		destination := &StructValue{
+			Fields: []Field{
+				{
+					Value: &U8Value{},
+				},
+				{
+					Value: &U16Value{},
+				},
+			},
+		}
+
+		err := codec.DecodeTopLevel(reader, destination)
+		require.NoError(t, err)
+		require.Equal(t, &StructValue{
+			Fields: []Field{
+				{
+					Value: &U8Value{Value: 0x01},
+				},
+				{
+					Value: &U16Value{Value: 0x4142},
+				},
+			},
+		}, destination)
 	})
 }

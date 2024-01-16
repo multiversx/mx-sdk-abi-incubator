@@ -35,8 +35,8 @@ func (c *defaultCodec) decodeTopLevelStruct(reader dataReader, value *StructValu
 }
 
 // See: https://docs.multiversx.com/developers/data/custom-types
-func (c *defaultCodec) encodeNestedEnum(writer dataWriter, value *EnumValue) error {
-	err := c.EncodeNested(writer, value.Discriminant)
+func (c *defaultCodec) encodeNestedEnum(writer dataWriter, value EnumValue) error {
+	err := c.EncodeNested(writer, U8Value{value.Discriminant})
 	if err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func (c *defaultCodec) encodeNestedEnum(writer dataWriter, value *EnumValue) err
 }
 
 // See: https://docs.multiversx.com/developers/data/custom-types
-func (c *defaultCodec) encodeTopLevelEnum(writer dataWriter, value *EnumValue) error {
+func (c *defaultCodec) encodeTopLevelEnum(writer dataWriter, value EnumValue) error {
 	if value.Discriminant == 0 && len(value.Fields) == 0 {
 		// Write nothing
 		return nil
@@ -80,5 +80,10 @@ func (c *defaultCodec) decodeNestedEnum(reader dataReader, value *EnumValue) err
 
 // See: https://docs.multiversx.com/developers/data/custom-types
 func (c *defaultCodec) decodeTopLevelEnum(reader dataReader, value *EnumValue) error {
-	//return c.decodeNestedEnum(reader, value)
+	if reader.IsCurrentPartEmpty() {
+		value.Discriminant = 0
+		return nil
+	}
+
+	return c.decodeNestedEnum(reader, value)
 }

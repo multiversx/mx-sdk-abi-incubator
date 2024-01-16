@@ -26,8 +26,10 @@ func (c *defaultCodec) EncodeNested(writer dataWriter, value interface{}) error 
 		return c.encodeNestedU64(writer, value.(U64Value))
 	case StructValue:
 		return c.encodeNestedStruct(writer, value.(StructValue))
+	case EnumValue:
+		return c.encodeNestedEnum(writer, value.(EnumValue))
 	default:
-		return newErrUnsupportedType(value)
+		return newErrUnsupportedType("defaultCodec.EncodeNested()", value)
 	}
 }
 
@@ -43,8 +45,10 @@ func (c *defaultCodec) EncodeTopLevel(writer dataWriter, value interface{}) erro
 		return c.encodeTopLevelU64(writer, value.(U64Value))
 	case StructValue:
 		return c.encodeTopLevelStruct(writer, value.(StructValue))
+	case EnumValue:
+		return c.encodeTopLevelEnum(writer, value.(EnumValue))
 	default:
-		return newErrUnsupportedType(value)
+		return newErrUnsupportedType("defaultCodec.EncodeTopLevel()", value)
 	}
 }
 
@@ -60,8 +64,10 @@ func (c *defaultCodec) DecodeNested(reader dataReader, value interface{}) error 
 		return c.decodeNestedU64(reader, value.(*U64Value))
 	case *StructValue:
 		return c.decodeNestedStruct(reader, value.(*StructValue))
+	case *EnumValue:
+		return c.decodeNestedEnum(reader, value.(*EnumValue))
 	default:
-		return newErrUnsupportedType(value)
+		return newErrUnsupportedType("defaultCodec.DecodeNested()", value)
 	}
 }
 
@@ -77,8 +83,10 @@ func (c *defaultCodec) DecodeTopLevel(reader dataReader, value interface{}) erro
 		return c.decodeTopLevelU64(reader, value.(*U64Value))
 	case *StructValue:
 		return c.decodeTopLevelStruct(reader, value.(*StructValue))
+	case *EnumValue:
+		return c.decodeTopLevelEnum(reader, value.(*EnumValue))
 	default:
-		return newErrUnsupportedType(value)
+		return newErrUnsupportedType("defaultCodec.DecodeTopLevel()", value)
 	}
 }
 

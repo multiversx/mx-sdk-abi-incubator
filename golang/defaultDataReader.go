@@ -78,6 +78,10 @@ func (d *defaultDataReader) GotoNextPart() error {
 	return nil
 }
 
+func (d *defaultDataReader) IsCurrentPartEmpty() bool {
+	return len(d.parts) > 0 && len(d.parts[d.partIndex]) == 0
+}
+
 // IsEndOfData returns true if the reader is already beyond the last part.
 func (d *defaultDataReader) IsEndOfData() bool {
 	return d.partIndex >= len(d.parts)
