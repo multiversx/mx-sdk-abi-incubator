@@ -74,10 +74,6 @@ type MultiValue struct {
 	Items []interface{}
 }
 
-type InputVariadicValues struct {
-	Items []interface{}
-}
-
 type OutputVariadicValues struct {
 	Items       []interface{}
 	ItemCreator func() interface{}

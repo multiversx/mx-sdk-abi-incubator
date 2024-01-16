@@ -44,15 +44,15 @@ func TestSerializer_SerializeMultiValue(t *testing.T) {
 	}, "42@42@4243@42434445")
 }
 
-func TestSerializer_SerializeInputVariadicValues(t *testing.T) {
+func TestSerializer_SerializeMultiValues(t *testing.T) {
 	testSerialize(t, []interface{}{
-		InputVariadicValues{
+		MultiValue{
 			Items: []interface{}{},
 		},
 	}, "")
 
 	testSerialize(t, []interface{}{
-		InputVariadicValues{
+		MultiValue{
 			Items: []interface{}{
 				U8Value{Value: 0x42},
 				U8Value{Value: 0x43},
@@ -62,7 +62,7 @@ func TestSerializer_SerializeInputVariadicValues(t *testing.T) {
 	}, "42@43@44")
 
 	testSerialize(t, []interface{}{
-		InputVariadicValues{
+		MultiValue{
 			Items: []interface{}{
 				MultiValue{
 					Items: []interface{}{
@@ -83,26 +83,28 @@ func TestSerializer_SerializeInputVariadicValues(t *testing.T) {
 
 func TestSerializer_Serialize_WithErrors(t *testing.T) {
 	serializer := NewSerializer(NewDefaultCodec())
+
+	t.Run("multi-value items of different types (1)", func(t *testing.T) {
 	writer := NewDefaultDataWriter()
 
-	t.Run("variadic items of different types (1)", func(t *testing.T) {
 		err := serializer.Serialize(writer, []interface{}{
-			InputVariadicValues{
+			MultiValue{
 				Items: []interface{}{
 					U8Value{Value: 0x42},
 					U16Value{Value: 0x4243},
 				},
 			},
 		})
-		// For now, the serializer does not perform such a strict type check.
-		// Although doable, it would be slightly complex and, if done, might be even dropped in the future
-		// (with respect to the decoder that is embedded in Rust-based smart contracts).
+
 		require.Nil(t, err)
+		require.Equal(t, "42@4243", writer.String())
 	})
 
-	t.Run("variadic items of different types (2)", func(t *testing.T) {
+	t.Run("multi-values of different types (2)", func(t *testing.T) {
+		writer := NewDefaultDataWriter()
+
 		err := serializer.Serialize(writer, []interface{}{
-			InputVariadicValues{
+			MultiValue{
 				Items: []interface{}{
 					MultiValue{
 						Items: []interface{}{
@@ -117,10 +119,9 @@ func TestSerializer_Serialize_WithErrors(t *testing.T) {
 				},
 			},
 		})
-		// For now, the serializer does not perform such a strict type check.
-		// Although doable, it would be slightly complex and, if done, might be even dropped in the future
-		// (with respect to the decoder that is embedded in Rust-based smart contracts).
+
 		require.Nil(t, err)
+		require.Equal(t, "42@43", writer.String())
 	})
 }
 

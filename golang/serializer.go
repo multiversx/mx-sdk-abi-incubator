@@ -13,7 +13,7 @@ func NewSerializer(codec codec) *serializer {
 func (s *serializer) Serialize(writer dataWriter, inputValues []interface{}) error {
 	var err error
 
-	for i, value := range inputValues {
+	for _, value := range inputValues {
 		if value == nil {
 			return errNilInputValue
 		}
@@ -21,12 +21,6 @@ func (s *serializer) Serialize(writer dataWriter, inputValues []interface{}) err
 		switch value.(type) {
 		case MultiValue:
 			err = s.serializeMultiValue(writer, value.(MultiValue))
-		case InputVariadicValues:
-			if i != len(inputValues)-1 {
-				return errVariadicMustBeLast
-			}
-
-			err = s.serializeInputVariadicValues(writer, value.(InputVariadicValues))
 		default:
 			err = s.serializeDirectlyEncodableValue(writer, value)
 		}
@@ -69,19 +63,6 @@ func (s *serializer) Deserialize(reader dataReader, outputValues []interface{}) 
 }
 
 func (s *serializer) serializeMultiValue(writer dataWriter, value MultiValue) error {
-	for _, item := range value.Items {
-		writer.GotoNextPart()
-
-		err := s.codec.EncodeTopLevel(writer, item)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (s *serializer) serializeInputVariadicValues(writer dataWriter, value InputVariadicValues) error {
 	for _, item := range value.Items {
 		err := s.Serialize(writer, []interface{}{item})
 		if err != nil {
