@@ -70,7 +70,7 @@ type OutputListValue struct {
 	ItemCreator func() interface{}
 }
 
-type CompositeValue struct {
+type MultiValue struct {
 	Items []interface{}
 }
 

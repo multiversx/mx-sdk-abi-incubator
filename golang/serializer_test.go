@@ -21,9 +21,9 @@ func TestSerializer_Serialize_DirectlyEncodableValues(t *testing.T) {
 	}, "42@4243")
 }
 
-func TestSerializer_SerializeCompositeValue(t *testing.T) {
+func TestSerializer_SerializeMultiValue(t *testing.T) {
 	testSerialize(t, []interface{}{
-		CompositeValue{
+		MultiValue{
 			Items: []interface{}{
 				U8Value{Value: 0x42},
 				U16Value{Value: 0x4243},
@@ -34,7 +34,7 @@ func TestSerializer_SerializeCompositeValue(t *testing.T) {
 
 	testSerialize(t, []interface{}{
 		U8Value{Value: 0x42},
-		CompositeValue{
+		MultiValue{
 			Items: []interface{}{
 				U8Value{Value: 0x42},
 				U16Value{Value: 0x4243},
@@ -64,13 +64,13 @@ func TestSerializer_SerializeInputVariadicValues(t *testing.T) {
 	testSerialize(t, []interface{}{
 		InputVariadicValues{
 			Items: []interface{}{
-				CompositeValue{
+				MultiValue{
 					Items: []interface{}{
 						U8Value{Value: 0x42},
 						U16Value{Value: 0x4243},
 					},
 				},
-				CompositeValue{
+				MultiValue{
 					Items: []interface{}{
 						U8Value{Value: 0x44},
 						U16Value{Value: 0x4445},
@@ -104,12 +104,12 @@ func TestSerializer_Serialize_WithErrors(t *testing.T) {
 		err := serializer.Serialize(writer, []interface{}{
 			InputVariadicValues{
 				Items: []interface{}{
-					CompositeValue{
+					MultiValue{
 						Items: []interface{}{
 							U8Value{Value: 0x42},
 						},
 					},
-					CompositeValue{
+					MultiValue{
 						Items: []interface{}{
 							U16Value{Value: 0x43},
 						},
@@ -155,10 +155,10 @@ func TestSerializer_Deserialize_DirectlyEncodableValues(t *testing.T) {
 	)
 }
 
-func TestSerializer_DeserializeCompositeValue(t *testing.T) {
+func TestSerializer_DeserializeMultiValue(t *testing.T) {
 	testDeserialize(t, "42@4243@42434445",
 		[]interface{}{
-			&CompositeValue{
+			&MultiValue{
 				Items: []interface{}{
 					&U8Value{},
 					&U16Value{},
@@ -167,7 +167,7 @@ func TestSerializer_DeserializeCompositeValue(t *testing.T) {
 			},
 		},
 		[]interface{}{
-			&CompositeValue{
+			&MultiValue{
 				Items: []interface{}{
 					&U8Value{Value: 0x42},
 					&U16Value{Value: 0x4243},
@@ -180,7 +180,7 @@ func TestSerializer_DeserializeCompositeValue(t *testing.T) {
 	testDeserialize(t, "42@42@4243@42434445",
 		[]interface{}{
 			&U8Value{},
-			&CompositeValue{
+			&MultiValue{
 				Items: []interface{}{
 					&U8Value{},
 					&U16Value{},
@@ -190,7 +190,7 @@ func TestSerializer_DeserializeCompositeValue(t *testing.T) {
 		},
 		[]interface{}{
 			&U8Value{Value: 0x42},
-			&CompositeValue{
+			&MultiValue{
 				Items: []interface{}{
 					&U8Value{Value: 0x42},
 					&U16Value{Value: 0x4243},

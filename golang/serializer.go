@@ -19,8 +19,8 @@ func (s *serializer) Serialize(writer dataWriter, inputValues []interface{}) err
 		}
 
 		switch value.(type) {
-		case CompositeValue:
-			err = s.serializeCompositeValue(writer, value.(CompositeValue))
+		case MultiValue:
+			err = s.serializeMultiValue(writer, value.(MultiValue))
 		case InputVariadicValues:
 			if i != len(inputValues)-1 {
 				return errVariadicMustBeLast
@@ -48,8 +48,8 @@ func (s *serializer) Deserialize(reader dataReader, outputValues []interface{}) 
 		}
 
 		switch value.(type) {
-		case *CompositeValue:
-			err = s.deserializeCompositeValue(reader, value.(*CompositeValue))
+		case *MultiValue:
+			err = s.deserializeMultiValue(reader, value.(*MultiValue))
 		case *OutputVariadicValues:
 			if i != len(outputValues)-1 {
 				return errVariadicMustBeLast
@@ -68,7 +68,7 @@ func (s *serializer) Deserialize(reader dataReader, outputValues []interface{}) 
 	return nil
 }
 
-func (s *serializer) serializeCompositeValue(writer dataWriter, value CompositeValue) error {
+func (s *serializer) serializeMultiValue(writer dataWriter, value MultiValue) error {
 	for _, item := range value.Items {
 		writer.GotoNextPart()
 
@@ -103,7 +103,7 @@ func (s *serializer) serializeDirectlyEncodableValue(writer dataWriter, value in
 	return nil
 }
 
-func (s *serializer) deserializeCompositeValue(reader dataReader, value *CompositeValue) error {
+func (s *serializer) deserializeMultiValue(reader dataReader, value *MultiValue) error {
 	for _, item := range value.Items {
 		err := s.deserializeDirectlyEncodableValue(reader, item)
 		if err != nil {
