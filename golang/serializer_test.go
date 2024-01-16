@@ -6,85 +6,42 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSerializer_Serialize_DirectlyEncodableValues(t *testing.T) {
-	testSerialize(t, []interface{}{
-		U8Value{Value: 0x42},
-	}, "42")
-
-	testSerialize(t, []interface{}{
-		U16Value{Value: 0x4243},
-	}, "4243")
-
-	testSerialize(t, []interface{}{
-		U8Value{Value: 0x42},
-		U16Value{Value: 0x4243},
-	}, "42@4243")
-}
-
-func TestSerializer_SerializeMultiValue(t *testing.T) {
-	testSerialize(t, []interface{}{
-		InputMultiValue{
-			Items: []interface{}{
-				U8Value{Value: 0x42},
-				U16Value{Value: 0x4243},
-				U32Value{Value: 0x42434445},
-			},
-		},
-	}, "42@4243@42434445")
-
-	testSerialize(t, []interface{}{
-		U8Value{Value: 0x42},
-		InputMultiValue{
-			Items: []interface{}{
-				U8Value{Value: 0x42},
-				U16Value{Value: 0x4243},
-				U32Value{Value: 0x42434445},
-			},
-		},
-	}, "42@42@4243@42434445")
-}
-
-func TestSerializer_SerializeMultiValues(t *testing.T) {
-	testSerialize(t, []interface{}{
-		InputMultiValue{
-			Items: []interface{}{},
-		},
-	}, "")
-
-	testSerialize(t, []interface{}{
-		InputMultiValue{
-			Items: []interface{}{
-				U8Value{Value: 0x42},
-				U8Value{Value: 0x43},
-				U8Value{Value: 0x44},
-			},
-		},
-	}, "42@43@44")
-
-	testSerialize(t, []interface{}{
-		InputMultiValue{
-			Items: []interface{}{
-				InputMultiValue{
-					Items: []interface{}{
-						U8Value{Value: 0x42},
-						U16Value{Value: 0x4243},
-					},
-				},
-				InputMultiValue{
-					Items: []interface{}{
-						U8Value{Value: 0x44},
-						U16Value{Value: 0x4445},
-					},
-				},
-			},
-		},
-	}, "42@4243@44@4445")
-}
-
-func TestSerializer_Serialize_WithErrors(t *testing.T) {
+func TestSerializer_Serialize(t *testing.T) {
 	serializer := NewSerializer(NewDefaultCodec())
 
-	t.Run("multi-value items of different types (1)", func(t *testing.T) {
+	t.Run("u8", func(t *testing.T) {
+		writer := NewDefaultDataWriter()
+		err := serializer.Serialize(writer, []interface{}{
+			U8Value{Value: 0x42},
+		})
+
+		require.NoError(t, err)
+		require.Equal(t, "42", writer.String())
+	})
+
+	t.Run("u16", func(t *testing.T) {
+		writer := NewDefaultDataWriter()
+		err := serializer.Serialize(writer, []interface{}{
+			U16Value{Value: 0x4243},
+		})
+
+		require.NoError(t, err)
+		require.Equal(t, "4243", writer.String())
+	})
+
+	t.Run("u8, u16", func(t *testing.T) {
+		writer := NewDefaultDataWriter()
+
+		err := serializer.Serialize(writer, []interface{}{
+			U8Value{Value: 0x42},
+			U16Value{Value: 0x4243},
+		})
+
+		require.NoError(t, err)
+		require.Equal(t, "42@4243", writer.String())
+	})
+
+	t.Run("multi<u8, u16, u32>", func(t *testing.T) {
 		writer := NewDefaultDataWriter()
 
 		err := serializer.Serialize(writer, []interface{}{
@@ -92,15 +49,34 @@ func TestSerializer_Serialize_WithErrors(t *testing.T) {
 				Items: []interface{}{
 					U8Value{Value: 0x42},
 					U16Value{Value: 0x4243},
+					U32Value{Value: 0x42434445},
 				},
 			},
 		})
 
-		require.Nil(t, err)
-		require.Equal(t, "42@4243", writer.String())
+		require.NoError(t, err)
+		require.Equal(t, "42@4243@42434445", writer.String())
 	})
 
-	t.Run("multi-values of different types (2)", func(t *testing.T) {
+	t.Run("u8, multi<u8, u16, u32>", func(t *testing.T) {
+		writer := NewDefaultDataWriter()
+
+		err := serializer.Serialize(writer, []interface{}{
+			U8Value{Value: 0x42},
+			InputMultiValue{
+				Items: []interface{}{
+					U8Value{Value: 0x42},
+					U16Value{Value: 0x4243},
+					U32Value{Value: 0x42434445},
+				},
+			},
+		})
+
+		require.NoError(t, err)
+		require.Equal(t, "42@42@4243@42434445", writer.String())
+	})
+
+	t.Run("multi<multi<u8, u16>, multi<u8, u16>>", func(t *testing.T) {
 		writer := NewDefaultDataWriter()
 
 		err := serializer.Serialize(writer, []interface{}{
@@ -109,22 +85,24 @@ func TestSerializer_Serialize_WithErrors(t *testing.T) {
 					InputMultiValue{
 						Items: []interface{}{
 							U8Value{Value: 0x42},
+							U16Value{Value: 0x4243},
 						},
 					},
 					InputMultiValue{
 						Items: []interface{}{
-							U16Value{Value: 0x43},
+							U8Value{Value: 0x44},
+							U16Value{Value: 0x4445},
 						},
 					},
 				},
 			},
 		})
 
-		require.Nil(t, err)
-		require.Equal(t, "42@43", writer.String())
+		require.NoError(t, err)
+		require.Equal(t, "42@4243@44@4445", writer.String())
 	})
 
-	t.Run("variadic items of different types", func(t *testing.T) {
+	t.Run("variadic, of different types", func(t *testing.T) {
 		writer := NewDefaultDataWriter()
 
 		err := serializer.Serialize(writer, []interface{}{
@@ -143,7 +121,7 @@ func TestSerializer_Serialize_WithErrors(t *testing.T) {
 		require.Equal(t, "42@4243", writer.String())
 	})
 
-	t.Run("variadic items should err when not last", func(t *testing.T) {
+	t.Run("variadic<u8>, u8: should err because variadic must be last", func(t *testing.T) {
 		writer := NewDefaultDataWriter()
 
 		err := serializer.Serialize(writer, []interface{}{
@@ -159,7 +137,7 @@ func TestSerializer_Serialize_WithErrors(t *testing.T) {
 		require.ErrorIs(t, err, errVariadicMustBeLast)
 	})
 
-	t.Run("variadic items (1)", func(t *testing.T) {
+	t.Run("u8, variadic<u8>", func(t *testing.T) {
 		writer := NewDefaultDataWriter()
 
 		err := serializer.Serialize(writer, []interface{}{
@@ -177,93 +155,121 @@ func TestSerializer_Serialize_WithErrors(t *testing.T) {
 	})
 }
 
-func TestSerializer_Deserialize_DirectlyEncodableValues(t *testing.T) {
-	testDeserialize(t, "42",
-		[]interface{}{
-			&U8Value{},
-		},
-		[]interface{}{
-			&U8Value{Value: 0x42},
-		},
-	)
+func TestSerializer_Deserialize(t *testing.T) {
+	serializer := NewSerializer(NewDefaultCodec())
 
-	testDeserialize(t, "4243",
-		[]interface{}{
-			&U16Value{},
-		},
-		[]interface{}{
-			&U16Value{Value: 0x4243},
-		},
-	)
-
-	testDeserialize(t, "42@4243",
-		[]interface{}{
-			&U8Value{},
-			&U16Value{},
-		},
-		[]interface{}{
-			&U8Value{Value: 0x42},
-			&U16Value{Value: 0x4243},
-		},
-	)
-}
-
-func TestSerializer_DeserializeMultiValue(t *testing.T) {
-	testDeserialize(t, "42@4243@42434445",
-		[]interface{}{
-			&OutputMultiValue{
-				Items: []interface{}{
-					&U8Value{},
-					&U16Value{},
-					&U32Value{},
-				},
-			},
-		},
-		[]interface{}{
-			&OutputMultiValue{
-				Items: []interface{}{
-					&U8Value{Value: 0x42},
-					&U16Value{Value: 0x4243},
-					&U32Value{Value: 0x42434445},
-				},
-			},
-		},
-	)
-
-	testDeserialize(t, "42@42@4243@42434445",
-		[]interface{}{
-			&U8Value{},
-			&OutputMultiValue{
-				Items: []interface{}{
-					&U8Value{},
-					&U16Value{},
-					&U32Value{},
-				},
-			},
-		},
-		[]interface{}{
-			&U8Value{Value: 0x42},
-			&OutputMultiValue{
-				Items: []interface{}{
-					&U8Value{Value: 0x42},
-					&U16Value{Value: 0x4243},
-					&U32Value{Value: 0x42434445},
-				},
-			},
-		},
-	)
-}
-
-func TestSerializer_DeserializeOutputVariadicValues(t *testing.T) {
 	t.Run("nil destination", func(t *testing.T) {
-		serializer, reader := setupDeserializeTest(t, "")
+		reader, _ := NewDefaultDataReaderFromString("")
 
 		err := serializer.Deserialize(reader, []interface{}{nil})
 		require.ErrorIs(t, err, errNilOutputValue)
 	})
 
-	t.Run("nil item creator", func(t *testing.T) {
-		serializer, reader := setupDeserializeTest(t, "")
+	t.Run("u8", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("42")
+
+		outputValues := []interface{}{
+			&U8Value{},
+		}
+
+		err := serializer.Deserialize(reader, outputValues)
+
+		require.Nil(t, err)
+		require.Equal(t, []interface{}{
+			&U8Value{Value: 0x42},
+		}, outputValues)
+	})
+
+	t.Run("u16", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("4243")
+
+		outputValues := []interface{}{
+			&U16Value{},
+		}
+
+		err := serializer.Deserialize(reader, outputValues)
+
+		require.Nil(t, err)
+		require.Equal(t, []interface{}{
+			&U16Value{Value: 0x4243},
+		}, outputValues)
+	})
+
+	t.Run("u8, u16", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("42@4243")
+
+		outputValues := []interface{}{
+			&U8Value{},
+			&U16Value{},
+		}
+
+		err := serializer.Deserialize(reader, outputValues)
+
+		require.Nil(t, err)
+		require.Equal(t, []interface{}{
+			&U8Value{Value: 0x42},
+			&U16Value{Value: 0x4243},
+		}, outputValues)
+	})
+
+	t.Run("multi<u8, u16, u32>", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("42@4243@42434445")
+
+		outputValues := []interface{}{
+			&OutputMultiValue{
+				Items: []interface{}{
+					&U8Value{},
+					&U16Value{},
+					&U32Value{},
+				},
+			},
+		}
+
+		err := serializer.Deserialize(reader, outputValues)
+
+		require.Nil(t, err)
+		require.Equal(t, []interface{}{
+			&OutputMultiValue{
+				Items: []interface{}{
+					&U8Value{Value: 0x42},
+					&U16Value{Value: 0x4243},
+					&U32Value{Value: 0x42434445},
+				},
+			},
+		}, outputValues)
+	})
+
+	t.Run("u8, multi<u8, u16, u32>", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("42@42@4243@42434445")
+
+		outputValues := []interface{}{
+			&U8Value{},
+			&OutputMultiValue{
+				Items: []interface{}{
+					&U8Value{},
+					&U16Value{},
+					&U32Value{},
+				},
+			},
+		}
+
+		err := serializer.Deserialize(reader, outputValues)
+
+		require.Nil(t, err)
+		require.Equal(t, []interface{}{
+			&U8Value{Value: 0x42},
+			&OutputMultiValue{
+				Items: []interface{}{
+					&U8Value{Value: 0x42},
+					&U16Value{Value: 0x4243},
+					&U32Value{Value: 0x42434445},
+				},
+			},
+		}, outputValues)
+	})
+
+	t.Run("variadic, should err because of nil item creator", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("")
 		destination := &OutputVariadicValues{
 			Items: []interface{}{},
 		}
@@ -272,8 +278,9 @@ func TestSerializer_DeserializeOutputVariadicValues(t *testing.T) {
 		require.ErrorIs(t, err, errNilItemCreator)
 	})
 
-	t.Run("empty", func(t *testing.T) {
-		serializer, reader := setupDeserializeTest(t, "")
+	t.Run("empty: u8", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("")
+
 		destination := &OutputVariadicValues{
 			Items:       []interface{}{},
 			ItemCreator: func() interface{} { return &U8Value{} },
@@ -284,8 +291,9 @@ func TestSerializer_DeserializeOutputVariadicValues(t *testing.T) {
 		require.Equal(t, []interface{}{&U8Value{Value: 0}}, destination.Items)
 	})
 
-	t.Run("variadic primitives (1)", func(t *testing.T) {
-		serializer, reader := setupDeserializeTest(t, "2A@2B@2C")
+	t.Run("variadic<u8>", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("2A@2B@2C")
+
 		destination := &OutputVariadicValues{
 			Items:       []interface{}{},
 			ItemCreator: func() interface{} { return &U8Value{} },
@@ -301,8 +309,9 @@ func TestSerializer_DeserializeOutputVariadicValues(t *testing.T) {
 		}, destination.Items)
 	})
 
-	t.Run("variadic primitives with zero", func(t *testing.T) {
-		serializer, reader := setupDeserializeTest(t, "@01@")
+	t.Run("varidic<u8>, with empty items", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("@01@")
+
 		destination := &OutputVariadicValues{
 			Items:       []interface{}{},
 			ItemCreator: func() interface{} { return &U8Value{} },
@@ -318,8 +327,9 @@ func TestSerializer_DeserializeOutputVariadicValues(t *testing.T) {
 		}, destination.Items)
 	})
 
-	t.Run("variadic primitives (3)", func(t *testing.T) {
-		serializer, reader := setupDeserializeTest(t, "AABBCCDD@DDCCBBAA")
+	t.Run("varidic<u32>", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("AABBCCDD@DDCCBBAA")
+
 		destination := &OutputVariadicValues{
 			Items:       []interface{}{},
 			ItemCreator: func() interface{} { return &U32Value{} },
@@ -334,8 +344,9 @@ func TestSerializer_DeserializeOutputVariadicValues(t *testing.T) {
 		}, destination.Items)
 	})
 
-	t.Run("variadic primitives (4)", func(t *testing.T) {
-		serializer, reader := setupDeserializeTest(t, "0100")
+	t.Run("varidic<u8>, should err because decoded value is too large", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("0100")
+
 		destination := &OutputVariadicValues{
 			Items:       []interface{}{},
 			ItemCreator: func() interface{} { return &U8Value{} },
@@ -344,31 +355,4 @@ func TestSerializer_DeserializeOutputVariadicValues(t *testing.T) {
 		err := serializer.Deserialize(reader, []interface{}{destination})
 		require.ErrorContains(t, err, "cannot decode u8, because of: decoded value is too large: 256 > 255")
 	})
-}
-
-func testSerialize(t *testing.T, values []interface{}, expected string) {
-	serializer := NewSerializer(NewDefaultCodec())
-	writer := NewDefaultDataWriter()
-
-	err := serializer.Serialize(writer, values)
-	require.NoError(t, err)
-	require.Equal(t, expected, writer.String())
-}
-
-func testDeserialize(t *testing.T, encoded string, destination []interface{}, expected []interface{}) {
-	serializer := NewSerializer(NewDefaultCodec())
-	reader, err := NewDefaultDataReaderFromString(encoded)
-	require.NoError(t, err)
-
-	err = serializer.Deserialize(reader, destination)
-	require.NoError(t, err)
-	require.Equal(t, expected, destination)
-}
-
-func setupDeserializeTest(t *testing.T, serializedInput string) (*serializer, *defaultDataReader) {
-	serializer := NewSerializer(NewDefaultCodec())
-	reader, err := NewDefaultDataReaderFromString(serializedInput)
-	require.NoError(t, err)
-
-	return serializer, reader
 }
