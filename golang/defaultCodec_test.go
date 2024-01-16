@@ -6,114 +6,238 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCodec_EncodeNested_Primitives(t *testing.T) {
-	testEncodeNested(t, U8Value{Value: 0x01}, "01")
-	testEncodeNested(t, U16Value{Value: 0x4142}, "4142")
-	testEncodeNested(t, U32Value{Value: 0x41424344}, "41424344")
-	testEncodeNested(t, U64Value{Value: 0x4142434445464748}, "4142434445464748")
-}
+func TestCodec_EncodeNested(t *testing.T) {
+	codec := NewDefaultCodec()
 
-func TestCodec_EncodeTopLevel_Primitives(t *testing.T) {
-	testEncodeTopLevel(t, U8Value{Value: 0x01}, "01")
-	testEncodeTopLevel(t, U16Value{Value: 0x0042}, "42")
-	testEncodeTopLevel(t, U32Value{Value: 0x00004242}, "4242")
-	testEncodeTopLevel(t, U64Value{Value: 0x0042434445464748}, "42434445464748")
-}
+	t.Run("u8", func(t *testing.T) {
+		writer := NewDefaultDataWriter()
+		writer.GotoNextPart()
 
-func TestCodec_DecodeNested_Primitives(t *testing.T) {
-	testDecodeNested(t, "01", &U8Value{}, &U8Value{Value: 0x01})
-	testDecodeNested(t, "4142", &U16Value{}, &U16Value{Value: 0x4142})
-	testDecodeNested(t, "41424344", &U32Value{}, &U32Value{Value: 0x41424344})
-	testDecodeNested(t, "4142434445464748", &U64Value{}, &U64Value{Value: 0x4142434445464748})
+		err := codec.EncodeNested(writer, U8Value{Value: 0x01})
+		require.NoError(t, err)
+		require.Equal(t, "01", writer.String())
+	})
 
-	testDecodeNestedWithError(t, "01", &U16Value{}, "cannot read 2 bytes")
-	testDecodeNestedWithError(t, "4142", &U32Value{}, "cannot read 4 bytes")
-	testDecodeNestedWithError(t, "41424344", &U64Value{}, "cannot read 8 bytes")
-}
+	t.Run("u16", func(t *testing.T) {
+		writer := NewDefaultDataWriter()
+		writer.GotoNextPart()
 
-func TestCodec_DecodeTopLevel_Primitives(t *testing.T) {
-	testDecodeTopLevel(t, "01", &U8Value{}, &U8Value{Value: 0x01})
-	testDecodeTopLevel(t, "02", &U16Value{}, &U16Value{Value: 0x0002})
-	testDecodeTopLevel(t, "03", &U32Value{}, &U32Value{Value: 0x00000003})
-	testDecodeTopLevel(t, "04", &U64Value{}, &U64Value{Value: 0x0000000000000004})
+		err := codec.EncodeNested(writer, U16Value{Value: 0x4142})
+		require.NoError(t, err)
+		require.Equal(t, "4142", writer.String())
+	})
 
-	testDecodeTopLevelWithError(t, "4142", &U8Value{}, "decoded value is too large")
-	testDecodeTopLevelWithError(t, "41424344", &U16Value{}, "decoded value is too large")
-	testDecodeTopLevelWithError(t, "4142434445464748", &U32Value{}, "decoded value is too large")
-	testDecodeTopLevelWithError(t, "41424344454647489876", &U64Value{}, "decoded value is too large")
-}
+	t.Run("u32", func(t *testing.T) {
+		writer := NewDefaultDataWriter()
+		writer.GotoNextPart()
 
-func TestCodec_EncodeNested_Structures(t *testing.T) {
-	fooStruct := StructValue{
-		Fields: []Field{
-			{
-				Value: U8Value{Value: 0x01},
+		err := codec.EncodeNested(writer, U32Value{Value: 0x41424344})
+		require.NoError(t, err)
+		require.Equal(t, "41424344", writer.String())
+	})
+
+	t.Run("u64", func(t *testing.T) {
+		writer := NewDefaultDataWriter()
+		writer.GotoNextPart()
+
+		err := codec.EncodeNested(writer, U64Value{Value: 0x4142434445464748})
+		require.NoError(t, err)
+		require.Equal(t, "4142434445464748", writer.String())
+	})
+
+	t.Run("struct", func(t *testing.T) {
+		writer := NewDefaultDataWriter()
+		writer.GotoNextPart()
+
+		fooStruct := StructValue{
+			Fields: []Field{
+				{
+					Value: U8Value{Value: 0x01},
+				},
+				{
+					Value: U16Value{Value: 0x4142},
+				},
 			},
-			{
-				Value: U16Value{Value: 0x4142},
-			},
-		},
-	}
+		}
 
-	testEncodeNested(t, fooStruct, "014142")
+		err := codec.EncodeNested(writer, fooStruct)
+		require.NoError(t, err)
+		require.Equal(t, "014142", writer.String())
+	})
 }
 
-func testEncodeNested(t *testing.T, value interface{}, expected string) {
+func TestCodec_EncodeTopLevel(t *testing.T) {
 	codec := NewDefaultCodec()
-	writer := NewDefaultDataWriter()
-	writer.GotoNextPart()
 
-	err := codec.EncodeNested(writer, value)
-	require.NoError(t, err)
-	require.Equal(t, expected, writer.String())
+	t.Run("u8", func(t *testing.T) {
+		writer := NewDefaultDataWriter()
+		writer.GotoNextPart()
+
+		err := codec.EncodeTopLevel(writer, U8Value{Value: 0x01})
+		require.NoError(t, err)
+		require.Equal(t, "01", writer.String())
+	})
+
+	t.Run("u16", func(t *testing.T) {
+		writer := NewDefaultDataWriter()
+		writer.GotoNextPart()
+
+		err := codec.EncodeTopLevel(writer, U16Value{Value: 0x0042})
+		require.NoError(t, err)
+		require.Equal(t, "42", writer.String())
+	})
+
+	t.Run("u32", func(t *testing.T) {
+		writer := NewDefaultDataWriter()
+		writer.GotoNextPart()
+
+		err := codec.EncodeTopLevel(writer, U32Value{Value: 0x00004242})
+		require.NoError(t, err)
+		require.Equal(t, "4242", writer.String())
+	})
+
+	t.Run("u64", func(t *testing.T) {
+		writer := NewDefaultDataWriter()
+		writer.GotoNextPart()
+
+		err := codec.EncodeTopLevel(writer, U64Value{Value: 0x0042434445464748})
+		require.NoError(t, err)
+		require.Equal(t, "42434445464748", writer.String())
+	})
 }
 
-func testEncodeTopLevel(t *testing.T, value interface{}, expected string) {
+func TestCodec_DecodeNested(t *testing.T) {
 	codec := NewDefaultCodec()
-	writer := NewDefaultDataWriter()
-	writer.GotoNextPart()
 
-	err := codec.EncodeTopLevel(writer, value)
-	require.NoError(t, err)
-	require.Equal(t, expected, writer.String())
+	t.Run("u8", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("01")
+		destination := &U8Value{}
+
+		err := codec.DecodeNested(reader, destination)
+		require.NoError(t, err)
+		require.Equal(t, &U8Value{Value: 0x01}, destination)
+	})
+
+	t.Run("u16", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("4142")
+		destination := &U16Value{}
+
+		err := codec.DecodeNested(reader, destination)
+		require.NoError(t, err)
+		require.Equal(t, &U16Value{Value: 0x4142}, destination)
+	})
+
+	t.Run("u32", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("41424344")
+		destination := &U32Value{}
+
+		err := codec.DecodeNested(reader, destination)
+		require.NoError(t, err)
+		require.Equal(t, &U32Value{Value: 0x41424344}, destination)
+	})
+
+	t.Run("u64", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("4142434445464748")
+		destination := &U64Value{}
+
+		err := codec.DecodeNested(reader, destination)
+		require.NoError(t, err)
+		require.Equal(t, &U64Value{Value: 0x4142434445464748}, destination)
+	})
+
+	t.Run("u16, should err because it cannot read 2 bytes", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("01")
+		destination := &U16Value{}
+
+		err := codec.DecodeNested(reader, destination)
+		require.ErrorContains(t, err, "cannot read 2 bytes")
+	})
+
+	t.Run("u32, should err because it cannot read 4 bytes", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("4142")
+		destination := &U32Value{}
+
+		err := codec.DecodeNested(reader, destination)
+		require.ErrorContains(t, err, "cannot read 4 bytes")
+	})
+
+	t.Run("u64, should err because it cannot read 8 bytes", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("41424344")
+		destination := &U64Value{}
+
+		err := codec.DecodeNested(reader, destination)
+		require.ErrorContains(t, err, "cannot read 8 bytes")
+	})
 }
 
-func testDecodeNested(t *testing.T, encoded string, destination interface{}, expected interface{}) {
+func TestCodec_DecodeTopLevel(t *testing.T) {
 	codec := NewDefaultCodec()
-	reader, err := NewDefaultDataReaderFromString(encoded)
-	require.NoError(t, err)
 
-	err = codec.DecodeNested(reader, destination)
-	require.NoError(t, err)
-	require.Equal(t, expected, destination)
-}
+	t.Run("u8", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("01")
+		destination := &U8Value{}
 
-func testDecodeNestedWithError(t *testing.T, encoded string, destination interface{}, expectedErrorMessage string) {
-	codec := NewDefaultCodec()
-	reader, err := NewDefaultDataReaderFromString(encoded)
-	require.NoError(t, err)
+		err := codec.DecodeTopLevel(reader, destination)
+		require.NoError(t, err)
+		require.Equal(t, &U8Value{Value: 0x01}, destination)
+	})
 
-	err = codec.DecodeNested(reader, destination)
-	require.ErrorContains(t, err, expectedErrorMessage)
-	require.Empty(t, destination)
-}
+	t.Run("u16", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("02")
+		destination := &U16Value{}
 
-func testDecodeTopLevel(t *testing.T, encoded string, destination interface{}, expected interface{}) {
-	codec := NewDefaultCodec()
-	reader, err := NewDefaultDataReaderFromString(encoded)
-	require.NoError(t, err)
+		err := codec.DecodeTopLevel(reader, destination)
+		require.NoError(t, err)
+		require.Equal(t, &U16Value{Value: 0x0002}, destination)
+	})
 
-	err = codec.DecodeTopLevel(reader, destination)
-	require.NoError(t, err)
-	require.Equal(t, expected, destination)
-}
+	t.Run("u32", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("03")
+		destination := &U32Value{}
 
-func testDecodeTopLevelWithError(t *testing.T, encoded string, destination interface{}, expectedErrorMessage string) {
-	codec := NewDefaultCodec()
-	reader, err := NewDefaultDataReaderFromString(encoded)
-	require.NoError(t, err)
+		err := codec.DecodeTopLevel(reader, destination)
+		require.NoError(t, err)
+		require.Equal(t, &U32Value{Value: 0x00000003}, destination)
+	})
 
-	err = codec.DecodeTopLevel(reader, destination)
-	require.ErrorContains(t, err, expectedErrorMessage)
-	require.Empty(t, destination)
+	t.Run("u64", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("04")
+		destination := &U64Value{}
+
+		err := codec.DecodeTopLevel(reader, destination)
+		require.NoError(t, err)
+		require.Equal(t, &U64Value{Value: 0x0000000000000004}, destination)
+	})
+
+	t.Run("u8, should err because decoded value is too large", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("4142")
+		destination := &U8Value{}
+
+		err := codec.DecodeTopLevel(reader, destination)
+		require.ErrorContains(t, err, "decoded value is too large")
+	})
+
+	t.Run("u16, should err because decoded value is too large", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("41424344")
+		destination := &U16Value{}
+
+		err := codec.DecodeTopLevel(reader, destination)
+		require.ErrorContains(t, err, "decoded value is too large")
+	})
+
+	t.Run("u32, should err because decoded value is too large", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("4142434445464748")
+		destination := &U32Value{}
+
+		err := codec.DecodeTopLevel(reader, destination)
+		require.ErrorContains(t, err, "decoded value is too large")
+	})
+
+	t.Run("u64, should err because decoded value is too large", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("41424344454647489876")
+		destination := &U64Value{}
+
+		err := codec.DecodeTopLevel(reader, destination)
+		require.ErrorContains(t, err, "decoded value is too large")
+	})
 }
