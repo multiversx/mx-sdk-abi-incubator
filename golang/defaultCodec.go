@@ -1,7 +1,6 @@
 package abi
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"math"
@@ -88,7 +87,7 @@ func (c *defaultCodec) encodeNestedU8(writer dataWriter, value U8Value) error {
 }
 
 func (c *defaultCodec) encodeTopLevelU8(writer dataWriter, value U8Value) error {
-	return c.encodeNestedU8(writer, value)
+	return writer.Write(trimLeadingZeros([]byte{value.Value}))
 }
 
 func (c *defaultCodec) decodeNestedU8(reader dataReader, value *U8Value) error {
@@ -120,7 +119,7 @@ func (c *defaultCodec) encodeNestedU16(writer dataWriter, value U16Value) error 
 func (c *defaultCodec) encodeTopLevelU16(writer dataWriter, value U16Value) error {
 	data := make([]byte, 2)
 	binary.BigEndian.PutUint16(data, value.Value)
-	return writer.Write(bytes.TrimLeft(data, string([]byte{0x00})))
+	return writer.Write(trimLeadingZeros(data))
 }
 
 func (c *defaultCodec) decodeNestedU16(reader dataReader, value *U16Value) error {
@@ -152,7 +151,7 @@ func (c *defaultCodec) encodeNestedU32(writer dataWriter, value U32Value) error 
 func (c *defaultCodec) encodeTopLevelU32(writer dataWriter, value U32Value) error {
 	data := make([]byte, 4)
 	binary.BigEndian.PutUint32(data, value.Value)
-	return writer.Write(bytes.TrimLeft(data, string([]byte{0x00})))
+	return writer.Write(trimLeadingZeros(data))
 }
 
 func (c *defaultCodec) decodeNestedU32(reader dataReader, value *U32Value) error {
@@ -184,7 +183,7 @@ func (c *defaultCodec) encodeNestedU64(writer dataWriter, value U64Value) error 
 func (c *defaultCodec) encodeTopLevelU64(writer dataWriter, value U64Value) error {
 	data := make([]byte, 8)
 	binary.BigEndian.PutUint64(data, value.Value)
-	return writer.Write(bytes.TrimLeft(data, string([]byte{0x00})))
+	return writer.Write(trimLeadingZeros(data))
 }
 
 func (c *defaultCodec) decodeNestedU64(reader dataReader, value *U64Value) error {

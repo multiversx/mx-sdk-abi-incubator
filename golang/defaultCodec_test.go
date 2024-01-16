@@ -78,6 +78,15 @@ func TestCodec_EncodeTopLevel(t *testing.T) {
 		require.Equal(t, "01", writer.String())
 	})
 
+	t.Run("u8 (zero)", func(t *testing.T) {
+		writer := NewDefaultDataWriter()
+		writer.GotoNextPart()
+
+		err := codec.EncodeTopLevel(writer, U8Value{Value: 0})
+		require.NoError(t, err)
+		require.Equal(t, "", writer.String())
+	})
+
 	t.Run("u16", func(t *testing.T) {
 		writer := NewDefaultDataWriter()
 		writer.GotoNextPart()

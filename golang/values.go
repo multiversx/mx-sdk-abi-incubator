@@ -61,6 +61,11 @@ type TupleValue struct {
 	Fields []Field
 }
 
+type EnumValue struct {
+	Discriminant uint8
+	Fields       []Field
+}
+
 type InputListValue struct {
 	Items []interface{}
 }
