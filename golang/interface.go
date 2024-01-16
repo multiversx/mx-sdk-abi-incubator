@@ -3,8 +3,8 @@ package abi
 type dataReader interface {
 	Read(numBytes int) ([]byte, error)
 	ReadWholePart() ([]byte, error)
-	HasUnreadData() bool
 	GotoNextPart() error
+	IsEndOfData() bool
 }
 
 type dataWriter interface {

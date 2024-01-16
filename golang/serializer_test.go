@@ -85,7 +85,7 @@ func TestSerializer_Serialize_WithErrors(t *testing.T) {
 	serializer := NewSerializer(NewDefaultCodec())
 
 	t.Run("multi-value items of different types (1)", func(t *testing.T) {
-	writer := NewDefaultDataWriter()
+		writer := NewDefaultDataWriter()
 
 		err := serializer.Serialize(writer, []interface{}{
 			InputMultiValue{
@@ -276,11 +276,12 @@ func TestSerializer_DeserializeOutputVariadicValues(t *testing.T) {
 		serializer, reader := setupDeserializeTest(t, "")
 		destination := &OutputVariadicValues{
 			Items:       []interface{}{},
-			ItemCreator: func() interface{} { return struct{}{} },
+			ItemCreator: func() interface{} { return &U8Value{} },
 		}
 
 		err := serializer.Deserialize(reader, []interface{}{destination})
 		require.NoError(t, err)
+		require.Equal(t, []interface{}{&U8Value{Value: 0}}, destination.Items)
 	})
 
 	t.Run("variadic primitives (1)", func(t *testing.T) {
@@ -300,7 +301,7 @@ func TestSerializer_DeserializeOutputVariadicValues(t *testing.T) {
 		}, destination.Items)
 	})
 
-	t.Run("variadic primitives (2)", func(t *testing.T) {
+	t.Run("variadic primitives with zero", func(t *testing.T) {
 		serializer, reader := setupDeserializeTest(t, "@01@")
 		destination := &OutputVariadicValues{
 			Items:       []interface{}{},

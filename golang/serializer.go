@@ -20,7 +20,7 @@ func (s *serializer) Serialize(writer dataWriter, inputValues []interface{}) err
 
 		switch value.(type) {
 		case InputMultiValue:
-			err = s.serializeInpurMultiValue(writer, value.(InputMultiValue))
+			err = s.serializeInputMultiValue(writer, value.(InputMultiValue))
 		case InputVariadicValues:
 			if i != len(inputValues)-1 {
 				return errVariadicMustBeLast
@@ -68,7 +68,7 @@ func (s *serializer) Deserialize(reader dataReader, outputValues []interface{}) 
 	return nil
 }
 
-func (s *serializer) serializeInpurMultiValue(writer dataWriter, value InputMultiValue) error {
+func (s *serializer) serializeInputMultiValue(writer dataWriter, value InputMultiValue) error {
 	for _, item := range value.Items {
 		err := s.Serialize(writer, []interface{}{item})
 		if err != nil {
@@ -117,7 +117,7 @@ func (s *serializer) deserializeOutputVariadicValues(reader dataReader, value *O
 		return errNilItemCreator
 	}
 
-	for reader.HasUnreadData() {
+	for !reader.IsEndOfData() {
 		newItem := value.ItemCreator()
 
 		err := s.Deserialize(reader, []interface{}{newItem})

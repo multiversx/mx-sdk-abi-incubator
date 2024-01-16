@@ -11,7 +11,7 @@ var errNilItemCreator = errors.New("nil item creator")
 var errWriterCannotWriteSinceThereIsNoPart = errors.New("cannot write, since there is no part to write to")
 var errVariadicMustBeLast = errors.New("variadic must be last")
 
-func newErrReaderCannotReadDueToEndOfData(numBytes int, offsetInPart int, partIndex int) error {
+func newErrReaderCannotReadDueToEndOfDataInPart(numBytes int, offsetInPart int, partIndex int) error {
 	return fmt.Errorf(
 		"cannot read %d bytes from offset %d, within part %d: unexpected end of data",
 		numBytes,
@@ -41,6 +41,13 @@ func newErrReaderCannotGotoNextPartDueToUnreadDataInCurrentPart(numUnreadBytes i
 		numUnreadBytes,
 		currentPartIndex,
 		lengthOfCurrentPart,
+	)
+}
+
+func newErrReaderCannotGotoNextPartDueToEndOfData(currentPartIndex int) error {
+	return fmt.Errorf(
+		"cannot advance to next part, since the reader is already beyond the last part; current part is %d",
+		currentPartIndex,
 	)
 }
 
