@@ -4,6 +4,7 @@ type dataReader interface {
 	Read(numBytes int) ([]byte, error)
 	ReadWholePart() ([]byte, error)
 	GotoNextPart() error
+	IsCurrentPartEmpty() bool
 	IsEndOfData() bool
 }
 
