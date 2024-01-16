@@ -63,10 +63,13 @@ func (c *defaultCodec) encodeTopLevelEnum(writer dataWriter, value EnumValue) er
 
 // See: https://docs.multiversx.com/developers/data/custom-types
 func (c *defaultCodec) decodeNestedEnum(reader dataReader, value *EnumValue) error {
-	err := c.DecodeNested(reader, &value.Discriminant)
+	discriminant := &U8Value{}
+	err := c.DecodeNested(reader, discriminant)
 	if err != nil {
 		return err
 	}
+
+	value.Discriminant = discriminant.Value
 
 	for _, field := range value.Fields {
 		err := c.DecodeNested(reader, field.Value)

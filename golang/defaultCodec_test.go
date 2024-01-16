@@ -319,6 +319,57 @@ func TestCodec_DecodeNested(t *testing.T) {
 			},
 		}, destination)
 	})
+
+	t.Run("enum (discriminant == 0)", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("00")
+		destination := &EnumValue{}
+
+		err := codec.DecodeNested(reader, destination)
+		require.NoError(t, err)
+		require.Equal(t, &EnumValue{
+			Discriminant: 0x00,
+		}, destination)
+	})
+
+	t.Run("enum (discriminant != 0)", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("01")
+		destination := &EnumValue{}
+
+		err := codec.DecodeNested(reader, destination)
+		require.NoError(t, err)
+		require.Equal(t, &EnumValue{
+			Discriminant: 0x01,
+		}, destination)
+	})
+
+	t.Run("enum with fields", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("01014142")
+
+		destination := &EnumValue{
+			Fields: []Field{
+				{
+					Value: &U8Value{},
+				},
+				{
+					Value: &U16Value{},
+				},
+			},
+		}
+
+		err := codec.DecodeNested(reader, destination)
+		require.NoError(t, err)
+		require.Equal(t, &EnumValue{
+			Discriminant: 0x01,
+			Fields: []Field{
+				{
+					Value: &U8Value{Value: 0x01},
+				},
+				{
+					Value: &U16Value{Value: 0x4142},
+				},
+			},
+		}, destination)
+	})
 }
 
 func TestCodec_DecodeTopLevel(t *testing.T) {
@@ -409,6 +460,57 @@ func TestCodec_DecodeTopLevel(t *testing.T) {
 		err := codec.DecodeTopLevel(reader, destination)
 		require.NoError(t, err)
 		require.Equal(t, &StructValue{
+			Fields: []Field{
+				{
+					Value: &U8Value{Value: 0x01},
+				},
+				{
+					Value: &U16Value{Value: 0x4142},
+				},
+			},
+		}, destination)
+	})
+
+	t.Run("enum (discriminant == 0)", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("")
+		destination := &EnumValue{}
+
+		err := codec.DecodeTopLevel(reader, destination)
+		require.NoError(t, err)
+		require.Equal(t, &EnumValue{
+			Discriminant: 0x00,
+		}, destination)
+	})
+
+	t.Run("enum (discriminant != 0)", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("01")
+		destination := &EnumValue{}
+
+		err := codec.DecodeTopLevel(reader, destination)
+		require.NoError(t, err)
+		require.Equal(t, &EnumValue{
+			Discriminant: 0x01,
+		}, destination)
+	})
+
+	t.Run("enum with fields", func(t *testing.T) {
+		reader, _ := NewDefaultDataReaderFromString("01014142")
+
+		destination := &EnumValue{
+			Fields: []Field{
+				{
+					Value: &U8Value{},
+				},
+				{
+					Value: &U16Value{},
+				},
+			},
+		}
+
+		err := codec.DecodeTopLevel(reader, destination)
+		require.NoError(t, err)
+		require.Equal(t, &EnumValue{
+			Discriminant: 0x01,
 			Fields: []Field{
 				{
 					Value: &U8Value{Value: 0x01},
