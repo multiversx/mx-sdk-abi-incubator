@@ -246,6 +246,50 @@ func TestSerializer_DeserializeOutputVariadicValues(t *testing.T) {
 			&U8Value{Value: 44},
 		}, destination.Items)
 	})
+
+	t.Run("variadic primitives (2)", func(t *testing.T) {
+		serializer, reader := setupDeserializeTest(t, "@01@")
+		destination := &OutputVariadicValues{
+			Items:       []interface{}{},
+			ItemCreator: func() interface{} { return &U8Value{} },
+		}
+
+		err := serializer.Deserialize(reader, []interface{}{destination})
+		require.NoError(t, err)
+
+		require.Equal(t, []interface{}{
+			&U8Value{Value: 0},
+			&U8Value{Value: 1},
+			&U8Value{Value: 0},
+		}, destination.Items)
+	})
+
+	t.Run("variadic primitives (3)", func(t *testing.T) {
+		serializer, reader := setupDeserializeTest(t, "AABBCCDD@DDCCBBAA")
+		destination := &OutputVariadicValues{
+			Items:       []interface{}{},
+			ItemCreator: func() interface{} { return &U32Value{} },
+		}
+
+		err := serializer.Deserialize(reader, []interface{}{destination})
+		require.NoError(t, err)
+
+		require.Equal(t, []interface{}{
+			&U32Value{Value: 0xAABBCCDD},
+			&U32Value{Value: 0xDDCCBBAA},
+		}, destination.Items)
+	})
+
+	t.Run("variadic primitives (4)", func(t *testing.T) {
+		serializer, reader := setupDeserializeTest(t, "0100")
+		destination := &OutputVariadicValues{
+			Items:       []interface{}{},
+			ItemCreator: func() interface{} { return &U8Value{} },
+		}
+
+		err := serializer.Deserialize(reader, []interface{}{destination})
+		require.ErrorContains(t, err, "cannot decode u8, because of: decoded value is too large: 256 > 255")
+	})
 }
 
 func testSerialize(t *testing.T, values []interface{}, expected string) {
