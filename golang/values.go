@@ -70,7 +70,15 @@ type OutputListValue struct {
 	ItemCreator func() interface{}
 }
 
-type MultiValue struct {
+type InputMultiValue struct {
+	Items []interface{}
+}
+
+type InputVariadicValues struct {
+	Items []interface{}
+}
+
+type OutputMultiValue struct {
 	Items []interface{}
 }
 

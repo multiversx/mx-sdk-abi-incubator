@@ -13,14 +13,20 @@ func NewSerializer(codec codec) *serializer {
 func (s *serializer) Serialize(writer dataWriter, inputValues []interface{}) error {
 	var err error
 
-	for _, value := range inputValues {
+	for i, value := range inputValues {
 		if value == nil {
 			return errNilInputValue
 		}
 
 		switch value.(type) {
-		case MultiValue:
-			err = s.serializeMultiValue(writer, value.(MultiValue))
+		case InputMultiValue:
+			err = s.serializeInpurMultiValue(writer, value.(InputMultiValue))
+		case InputVariadicValues:
+			if i != len(inputValues)-1 {
+				return errVariadicMustBeLast
+			}
+
+			err = s.serializeInputVariadicValues(writer, value.(InputVariadicValues))
 		default:
 			err = s.serializeDirectlyEncodableValue(writer, value)
 		}
@@ -42,8 +48,8 @@ func (s *serializer) Deserialize(reader dataReader, outputValues []interface{}) 
 		}
 
 		switch value.(type) {
-		case *MultiValue:
-			err = s.deserializeMultiValue(reader, value.(*MultiValue))
+		case *OutputMultiValue:
+			err = s.deserializeOutputMultiValue(reader, value.(*OutputMultiValue))
 		case *OutputVariadicValues:
 			if i != len(outputValues)-1 {
 				return errVariadicMustBeLast
@@ -62,7 +68,18 @@ func (s *serializer) Deserialize(reader dataReader, outputValues []interface{}) 
 	return nil
 }
 
-func (s *serializer) serializeMultiValue(writer dataWriter, value MultiValue) error {
+func (s *serializer) serializeInpurMultiValue(writer dataWriter, value InputMultiValue) error {
+	for _, item := range value.Items {
+		err := s.Serialize(writer, []interface{}{item})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *serializer) serializeInputVariadicValues(writer dataWriter, value InputVariadicValues) error {
 	for _, item := range value.Items {
 		err := s.Serialize(writer, []interface{}{item})
 		if err != nil {
@@ -84,9 +101,9 @@ func (s *serializer) serializeDirectlyEncodableValue(writer dataWriter, value in
 	return nil
 }
 
-func (s *serializer) deserializeMultiValue(reader dataReader, value *MultiValue) error {
+func (s *serializer) deserializeOutputMultiValue(reader dataReader, value *OutputMultiValue) error {
 	for _, item := range value.Items {
-		err := s.deserializeDirectlyEncodableValue(reader, item)
+		err := s.Deserialize(reader, []interface{}{item})
 		if err != nil {
 			return err
 		}

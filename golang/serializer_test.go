@@ -23,7 +23,7 @@ func TestSerializer_Serialize_DirectlyEncodableValues(t *testing.T) {
 
 func TestSerializer_SerializeMultiValue(t *testing.T) {
 	testSerialize(t, []interface{}{
-		MultiValue{
+		InputMultiValue{
 			Items: []interface{}{
 				U8Value{Value: 0x42},
 				U16Value{Value: 0x4243},
@@ -34,7 +34,7 @@ func TestSerializer_SerializeMultiValue(t *testing.T) {
 
 	testSerialize(t, []interface{}{
 		U8Value{Value: 0x42},
-		MultiValue{
+		InputMultiValue{
 			Items: []interface{}{
 				U8Value{Value: 0x42},
 				U16Value{Value: 0x4243},
@@ -46,13 +46,13 @@ func TestSerializer_SerializeMultiValue(t *testing.T) {
 
 func TestSerializer_SerializeMultiValues(t *testing.T) {
 	testSerialize(t, []interface{}{
-		MultiValue{
+		InputMultiValue{
 			Items: []interface{}{},
 		},
 	}, "")
 
 	testSerialize(t, []interface{}{
-		MultiValue{
+		InputMultiValue{
 			Items: []interface{}{
 				U8Value{Value: 0x42},
 				U8Value{Value: 0x43},
@@ -62,15 +62,15 @@ func TestSerializer_SerializeMultiValues(t *testing.T) {
 	}, "42@43@44")
 
 	testSerialize(t, []interface{}{
-		MultiValue{
+		InputMultiValue{
 			Items: []interface{}{
-				MultiValue{
+				InputMultiValue{
 					Items: []interface{}{
 						U8Value{Value: 0x42},
 						U16Value{Value: 0x4243},
 					},
 				},
-				MultiValue{
+				InputMultiValue{
 					Items: []interface{}{
 						U8Value{Value: 0x44},
 						U16Value{Value: 0x4445},
@@ -88,7 +88,7 @@ func TestSerializer_Serialize_WithErrors(t *testing.T) {
 	writer := NewDefaultDataWriter()
 
 		err := serializer.Serialize(writer, []interface{}{
-			MultiValue{
+			InputMultiValue{
 				Items: []interface{}{
 					U8Value{Value: 0x42},
 					U16Value{Value: 0x4243},
@@ -104,14 +104,14 @@ func TestSerializer_Serialize_WithErrors(t *testing.T) {
 		writer := NewDefaultDataWriter()
 
 		err := serializer.Serialize(writer, []interface{}{
-			MultiValue{
+			InputMultiValue{
 				Items: []interface{}{
-					MultiValue{
+					InputMultiValue{
 						Items: []interface{}{
 							U8Value{Value: 0x42},
 						},
 					},
-					MultiValue{
+					InputMultiValue{
 						Items: []interface{}{
 							U16Value{Value: 0x43},
 						},
@@ -122,6 +122,58 @@ func TestSerializer_Serialize_WithErrors(t *testing.T) {
 
 		require.Nil(t, err)
 		require.Equal(t, "42@43", writer.String())
+	})
+
+	t.Run("variadic items of different types", func(t *testing.T) {
+		writer := NewDefaultDataWriter()
+
+		err := serializer.Serialize(writer, []interface{}{
+			InputVariadicValues{
+				Items: []interface{}{
+					U8Value{Value: 0x42},
+					U16Value{Value: 0x4243},
+				},
+			},
+		})
+
+		// For now, the serializer does not perform such a strict type check.
+		// Although doable, it would be slightly complex and, if done, might be even dropped in the future
+		// (with respect to the decoder that is embedded in Rust-based smart contracts).
+		require.Nil(t, err)
+		require.Equal(t, "42@4243", writer.String())
+	})
+
+	t.Run("variadic items should err when not last", func(t *testing.T) {
+		writer := NewDefaultDataWriter()
+
+		err := serializer.Serialize(writer, []interface{}{
+			InputVariadicValues{
+				Items: []interface{}{
+					U8Value{Value: 0x42},
+					U8Value{Value: 0x43},
+				},
+			},
+			U8Value{Value: 0x44},
+		})
+
+		require.ErrorIs(t, err, errVariadicMustBeLast)
+	})
+
+	t.Run("variadic items (1)", func(t *testing.T) {
+		writer := NewDefaultDataWriter()
+
+		err := serializer.Serialize(writer, []interface{}{
+			U8Value{Value: 0x41},
+			InputVariadicValues{
+				Items: []interface{}{
+					U8Value{Value: 0x42},
+					U8Value{Value: 0x43},
+				},
+			},
+		})
+
+		require.Nil(t, err)
+		require.Equal(t, "41@42@43", writer.String())
 	})
 }
 
@@ -159,7 +211,7 @@ func TestSerializer_Deserialize_DirectlyEncodableValues(t *testing.T) {
 func TestSerializer_DeserializeMultiValue(t *testing.T) {
 	testDeserialize(t, "42@4243@42434445",
 		[]interface{}{
-			&MultiValue{
+			&OutputMultiValue{
 				Items: []interface{}{
 					&U8Value{},
 					&U16Value{},
@@ -168,7 +220,7 @@ func TestSerializer_DeserializeMultiValue(t *testing.T) {
 			},
 		},
 		[]interface{}{
-			&MultiValue{
+			&OutputMultiValue{
 				Items: []interface{}{
 					&U8Value{Value: 0x42},
 					&U16Value{Value: 0x4243},
@@ -181,7 +233,7 @@ func TestSerializer_DeserializeMultiValue(t *testing.T) {
 	testDeserialize(t, "42@42@4243@42434445",
 		[]interface{}{
 			&U8Value{},
-			&MultiValue{
+			&OutputMultiValue{
 				Items: []interface{}{
 					&U8Value{},
 					&U16Value{},
@@ -191,7 +243,7 @@ func TestSerializer_DeserializeMultiValue(t *testing.T) {
 		},
 		[]interface{}{
 			&U8Value{Value: 0x42},
-			&MultiValue{
+			&OutputMultiValue{
 				Items: []interface{}{
 					&U8Value{Value: 0x42},
 					&U16Value{Value: 0x4243},
