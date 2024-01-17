@@ -16,12 +16,11 @@ func (c *defaultCodec) encodeNestedI8(writer dataWriter, value I8Value) error {
 }
 
 func (c *defaultCodec) encodeTopLevelU8(writer dataWriter, value U8Value) error {
-	return writer.Write(trimLeadingZeros([]byte{value.Value}))
+	return c.encodeTopLevelUnsignedNumber(writer, uint64(value.Value))
 }
 
 func (c *defaultCodec) encodeTopLevelI8(writer dataWriter, value I8Value) error {
-	// BAD, since leading zero might be good! remove only superfluous leading zeros!
-	return writer.Write(trimLeadingZeros([]byte{byte(value.Value)}))
+	return c.encodeTopLevelSignedNumber(writer, int64(value.Value))
 }
 
 func (c *defaultCodec) decodeNestedU8(reader dataReader, value *U8Value) error {
@@ -51,9 +50,7 @@ func (c *defaultCodec) encodeNestedU16(writer dataWriter, value U16Value) error 
 }
 
 func (c *defaultCodec) encodeTopLevelU16(writer dataWriter, value U16Value) error {
-	data := make([]byte, 2)
-	binary.BigEndian.PutUint16(data, value.Value)
-	return writer.Write(trimLeadingZeros(data))
+	return c.encodeTopLevelUnsignedNumber(writer, uint64(value.Value))
 }
 
 func (c *defaultCodec) decodeNestedU16(reader dataReader, value *U16Value) error {
@@ -83,9 +80,7 @@ func (c *defaultCodec) encodeNestedU32(writer dataWriter, value U32Value) error 
 }
 
 func (c *defaultCodec) encodeTopLevelU32(writer dataWriter, value U32Value) error {
-	data := make([]byte, 4)
-	binary.BigEndian.PutUint32(data, value.Value)
-	return writer.Write(trimLeadingZeros(data))
+	return c.encodeTopLevelUnsignedNumber(writer, uint64(value.Value))
 }
 
 func (c *defaultCodec) decodeNestedU32(reader dataReader, value *U32Value) error {
@@ -115,9 +110,7 @@ func (c *defaultCodec) encodeNestedU64(writer dataWriter, value U64Value) error 
 }
 
 func (c *defaultCodec) encodeTopLevelU64(writer dataWriter, value U64Value) error {
-	data := make([]byte, 8)
-	binary.BigEndian.PutUint64(data, value.Value)
-	return writer.Write(trimLeadingZeros(data))
+	return c.encodeTopLevelUnsignedNumber(writer, uint64(value.Value))
 }
 
 func (c *defaultCodec) decodeNestedU64(reader dataReader, value *U64Value) error {
@@ -138,6 +131,18 @@ func (c *defaultCodec) decodeTopLevelU64(reader dataReader, value *U64Value) err
 
 	value.Value = uint64(n)
 	return nil
+}
+
+func (c *defaultCodec) encodeTopLevelUnsignedNumber(writer dataWriter, value uint64) error {
+	b := big.NewInt(0).SetUint64(value)
+	data := b.Bytes()
+	return writer.Write(data)
+}
+
+func (c *defaultCodec) encodeTopLevelSignedNumber(writer dataWriter, value int64) error {
+	b := big.NewInt(0).SetInt64(value)
+	data := b.Bytes()
+	return writer.Write(data)
 }
 
 func (c *defaultCodec) decodeTopLevelUnsignedNumber(reader dataReader, maxValue uint64) (uint64, error) {

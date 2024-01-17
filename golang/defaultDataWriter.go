@@ -9,7 +9,8 @@ type defaultDataWriter struct {
 	parts [][]byte
 }
 
-// NewDefaultDataWriter creates a new defaultDataWriter. A newly-created writer has no parts.
+// NewDefaultDataWriter creates a new defaultDataWriter.
+// A newly-created writer has no parts.
 // Parts are created by calling GotoNextPart().
 func NewDefaultDataWriter() *defaultDataWriter {
 	return &defaultDataWriter{
@@ -29,6 +30,10 @@ func (d *defaultDataWriter) Write(data []byte) error {
 
 func (d *defaultDataWriter) GotoNextPart() {
 	d.parts = append(d.parts, []byte{})
+}
+
+func (d *defaultDataWriter) GetParts() [][]byte {
+	return d.parts
 }
 
 func (d *defaultDataWriter) String() string {

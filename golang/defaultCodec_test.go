@@ -9,40 +9,49 @@ import (
 func TestCodec_EncodeNested(t *testing.T) {
 	codec := NewDefaultCodec()
 
-	t.Run("u8", func(t *testing.T) {
+	doTest := func(t *testing.T, value interface{}, expected string) {
 		writer := NewDefaultDataWriter()
 		writer.GotoNextPart()
 
-		err := codec.EncodeNested(writer, U8Value{Value: 0x01})
+		err := codec.EncodeNested(writer, value)
 		require.NoError(t, err)
-		require.Equal(t, "01", writer.String())
+		require.Equal(t, expected, writer.String())
+	}
+
+	t.Run("u8", func(t *testing.T) {
+		doTest(t, U8Value{Value: 0x00}, "00")
+		doTest(t, U8Value{Value: 0x01}, "01")
+		doTest(t, U8Value{Value: 0x42}, "42")
+		doTest(t, U8Value{Value: 0xff}, "ff")
 	})
 
 	t.Run("u16", func(t *testing.T) {
-		writer := NewDefaultDataWriter()
-		writer.GotoNextPart()
-
-		err := codec.EncodeNested(writer, U16Value{Value: 0x4142})
-		require.NoError(t, err)
-		require.Equal(t, "4142", writer.String())
+		doTest(t, U16Value{Value: 0x00}, "0000")
+		doTest(t, U16Value{Value: 0x11}, "0011")
+		doTest(t, U16Value{Value: 0x1234}, "1234")
+		doTest(t, U16Value{Value: 0xffff}, "ffff")
 	})
 
 	t.Run("u32", func(t *testing.T) {
-		writer := NewDefaultDataWriter()
-		writer.GotoNextPart()
-
-		err := codec.EncodeNested(writer, U32Value{Value: 0x41424344})
-		require.NoError(t, err)
-		require.Equal(t, "41424344", writer.String())
+		doTest(t, U32Value{Value: 0x00000000}, "00000000")
+		doTest(t, U32Value{Value: 0x00000011}, "00000011")
+		doTest(t, U32Value{Value: 0x00001122}, "00001122")
+		doTest(t, U32Value{Value: 0x00112233}, "00112233")
+		doTest(t, U32Value{Value: 0x11223344}, "11223344")
+		doTest(t, U32Value{Value: 0xffffffff}, "ffffffff")
 	})
 
 	t.Run("u64", func(t *testing.T) {
-		writer := NewDefaultDataWriter()
-		writer.GotoNextPart()
-
-		err := codec.EncodeNested(writer, U64Value{Value: 0x4142434445464748})
-		require.NoError(t, err)
-		require.Equal(t, "4142434445464748", writer.String())
+		doTest(t, U64Value{Value: 0x0000000000000000}, "0000000000000000")
+		doTest(t, U64Value{Value: 0x0000000000000011}, "0000000000000011")
+		doTest(t, U64Value{Value: 0x0000000000001122}, "0000000000001122")
+		doTest(t, U64Value{Value: 0x0000000000112233}, "0000000000112233")
+		doTest(t, U64Value{Value: 0x0000000011223344}, "0000000011223344")
+		doTest(t, U64Value{Value: 0x0000001122334455}, "0000001122334455")
+		doTest(t, U64Value{Value: 0x0000112233445566}, "0000112233445566")
+		doTest(t, U64Value{Value: 0x0011223344556677}, "0011223344556677")
+		doTest(t, U64Value{Value: 0x1122334455667788}, "1122334455667788")
+		doTest(t, U64Value{Value: 0xffffffffffffffff}, "ffffffffffffffff")
 	})
 
 	t.Run("struct", func(t *testing.T) {
