@@ -18,14 +18,14 @@ func NewDefaultDataWriter() *defaultDataWriter {
 	}
 }
 
-func (d *defaultDataWriter) Write(data []byte) error {
+func (d *defaultDataWriter) Write(data []byte) (int, error) {
 	if len(d.parts) == 0 {
-		return errWriterCannotWriteSinceThereIsNoPart
+		return 0, errWriterCannotWriteSinceThereIsNoPart
 	}
 
 	partIndex := len(d.parts) - 1
 	d.parts[partIndex] = append(d.parts[partIndex], data...)
-	return nil
+	return len(data), nil
 }
 
 func (d *defaultDataWriter) GotoNextPart() {

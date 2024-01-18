@@ -3,23 +3,26 @@ package abi
 import (
 	"encoding/binary"
 	"fmt"
+	"io"
 	"math"
 	"math/big"
 )
 
-func (c *defaultCodec) encodeNestedU8(writer dataWriter, value U8Value) error {
-	return writer.Write([]byte{value.Value})
+func (c *defaultCodec) encodeNestedU8(writer io.Writer, value U8Value) error {
+	_, err := writer.Write([]byte{value.Value})
+	return err
 }
 
-func (c *defaultCodec) encodeNestedI8(writer dataWriter, value I8Value) error {
-	return writer.Write([]byte{byte(value.Value)})
+func (c *defaultCodec) encodeNestedI8(writer io.Writer, value I8Value) error {
+	_, err := writer.Write([]byte{byte(value.Value)})
+	return err
 }
 
-func (c *defaultCodec) encodeTopLevelU8(writer dataWriter, value U8Value) error {
+func (c *defaultCodec) encodeTopLevelU8(writer io.Writer, value U8Value) error {
 	return c.encodeTopLevelUnsignedNumber(writer, uint64(value.Value))
 }
 
-func (c *defaultCodec) encodeTopLevelI8(writer dataWriter, value I8Value) error {
+func (c *defaultCodec) encodeTopLevelI8(writer io.Writer, value I8Value) error {
 	return c.encodeTopLevelSignedNumber(writer, int64(value.Value))
 }
 
@@ -43,13 +46,14 @@ func (c *defaultCodec) decodeTopLevelU8(reader dataReader, value *U8Value) error
 	return nil
 }
 
-func (c *defaultCodec) encodeNestedU16(writer dataWriter, value U16Value) error {
+func (c *defaultCodec) encodeNestedU16(writer io.Writer, value U16Value) error {
 	data := make([]byte, 2)
 	binary.BigEndian.PutUint16(data, value.Value)
-	return writer.Write(data)
+	_, err := writer.Write(data)
+	return err
 }
 
-func (c *defaultCodec) encodeTopLevelU16(writer dataWriter, value U16Value) error {
+func (c *defaultCodec) encodeTopLevelU16(writer io.Writer, value U16Value) error {
 	return c.encodeTopLevelUnsignedNumber(writer, uint64(value.Value))
 }
 
@@ -73,13 +77,14 @@ func (c *defaultCodec) decodeTopLevelU16(reader dataReader, value *U16Value) err
 	return nil
 }
 
-func (c *defaultCodec) encodeNestedU32(writer dataWriter, value U32Value) error {
+func (c *defaultCodec) encodeNestedU32(writer io.Writer, value U32Value) error {
 	data := make([]byte, 4)
 	binary.BigEndian.PutUint32(data, value.Value)
-	return writer.Write(data)
+	_, err := writer.Write(data)
+	return err
 }
 
-func (c *defaultCodec) encodeTopLevelU32(writer dataWriter, value U32Value) error {
+func (c *defaultCodec) encodeTopLevelU32(writer io.Writer, value U32Value) error {
 	return c.encodeTopLevelUnsignedNumber(writer, uint64(value.Value))
 }
 
@@ -103,13 +108,14 @@ func (c *defaultCodec) decodeTopLevelU32(reader dataReader, value *U32Value) err
 	return nil
 }
 
-func (c *defaultCodec) encodeNestedU64(writer dataWriter, value U64Value) error {
+func (c *defaultCodec) encodeNestedU64(writer io.Writer, value U64Value) error {
 	data := make([]byte, 8)
 	binary.BigEndian.PutUint64(data, value.Value)
-	return writer.Write(data)
+	_, err := writer.Write(data)
+	return err
 }
 
-func (c *defaultCodec) encodeTopLevelU64(writer dataWriter, value U64Value) error {
+func (c *defaultCodec) encodeTopLevelU64(writer io.Writer, value U64Value) error {
 	return c.encodeTopLevelUnsignedNumber(writer, uint64(value.Value))
 }
 
@@ -133,16 +139,18 @@ func (c *defaultCodec) decodeTopLevelU64(reader dataReader, value *U64Value) err
 	return nil
 }
 
-func (c *defaultCodec) encodeTopLevelUnsignedNumber(writer dataWriter, value uint64) error {
+func (c *defaultCodec) encodeTopLevelUnsignedNumber(writer io.Writer, value uint64) error {
 	b := big.NewInt(0).SetUint64(value)
 	data := b.Bytes()
-	return writer.Write(data)
+	_, err := writer.Write(data)
+	return err
 }
 
-func (c *defaultCodec) encodeTopLevelSignedNumber(writer dataWriter, value int64) error {
+func (c *defaultCodec) encodeTopLevelSignedNumber(writer io.Writer, value int64) error {
 	b := big.NewInt(0).SetInt64(value)
 	data := b.Bytes()
-	return writer.Write(data)
+	_, err := writer.Write(data)
+	return err
 }
 
 func (c *defaultCodec) decodeTopLevelUnsignedNumber(reader dataReader, maxValue uint64) (uint64, error) {

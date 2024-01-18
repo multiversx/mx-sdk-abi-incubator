@@ -1,5 +1,7 @@
 package abi
 
+import "io"
+
 type serializer struct {
 	codec codec
 }
@@ -28,6 +30,7 @@ func (s *serializer) Serialize(writer dataWriter, inputValues []interface{}) err
 
 			err = s.serializeInputVariadicValues(writer, value.(InputVariadicValues))
 		default:
+			writer.GotoNextPart()
 			err = s.serializeDirectlyEncodableValue(writer, value)
 		}
 
@@ -90,15 +93,14 @@ func (s *serializer) serializeInputVariadicValues(writer dataWriter, value Input
 	return nil
 }
 
-func (s *serializer) serializeDirectlyEncodableValue(writer dataWriter, value interface{}) error {
-	writer.GotoNextPart()
-
-	err := s.codec.EncodeTopLevel(writer, value)
+func (s *serializer) serializeDirectlyEncodableValue(writer io.Writer, value interface{}) error {
+	data, err := s.codec.EncodeTopLevel(value)
 	if err != nil {
 		return err
 	}
 
-	return nil
+	_, err = writer.Write(data)
+	return err
 }
 
 func (s *serializer) deserializeOutputMultiValue(reader dataReader, value *OutputMultiValue) error {

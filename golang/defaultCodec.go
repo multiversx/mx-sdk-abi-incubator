@@ -1,5 +1,10 @@
 package abi
 
+import (
+	"bytes"
+	"io"
+)
+
 type defaultCodec struct {
 }
 
@@ -7,7 +12,17 @@ func NewDefaultCodec() *defaultCodec {
 	return &defaultCodec{}
 }
 
-func (c *defaultCodec) EncodeNested(writer dataWriter, value interface{}) error {
+func (c *defaultCodec) EncodeNested(value interface{}) ([]byte, error) {
+	writer := bytes.NewBuffer(nil)
+	err := c.doEncodeNested(writer, value)
+	if err != nil {
+		return nil, err
+	}
+
+	return writer.Bytes(), nil
+}
+
+func (c *defaultCodec) doEncodeNested(writer io.Writer, value interface{}) error {
 	switch value.(type) {
 	case U8Value:
 		return c.encodeNestedU8(writer, value.(U8Value))
@@ -26,7 +41,17 @@ func (c *defaultCodec) EncodeNested(writer dataWriter, value interface{}) error 
 	}
 }
 
-func (c *defaultCodec) EncodeTopLevel(writer dataWriter, value interface{}) error {
+func (c *defaultCodec) EncodeTopLevel(value interface{}) ([]byte, error) {
+	writer := bytes.NewBuffer(nil)
+	err := c.doEncodeTopLevel(writer, value)
+	if err != nil {
+		return nil, err
+	}
+
+	return writer.Bytes(), nil
+}
+
+func (c *defaultCodec) doEncodeTopLevel(writer io.Writer, value interface{}) error {
 	switch value.(type) {
 	case U8Value:
 		return c.encodeTopLevelU8(writer, value.(U8Value))

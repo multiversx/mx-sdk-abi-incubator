@@ -9,13 +9,13 @@ type dataReader interface {
 }
 
 type dataWriter interface {
-	Write(data []byte) error
+	Write(data []byte) (int, error)
 	GotoNextPart()
 }
 
 type codec interface {
-	EncodeNested(writer dataWriter, value interface{}) error
-	EncodeTopLevel(writer dataWriter, value interface{}) error
+	EncodeNested(value interface{}) ([]byte, error)
+	EncodeTopLevel(value interface{}) ([]byte, error)
 	DecodeNested(reader dataReader, value interface{}) error
 	DecodeTopLevel(reader dataReader, value interface{}) error
 }

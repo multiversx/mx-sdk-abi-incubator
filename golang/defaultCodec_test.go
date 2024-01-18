@@ -1,21 +1,18 @@
 package abi
 
 import (
+	"encoding/hex"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestCodec_EncodeNested(t *testing.T) {
-	codec := NewDefaultCodec()
-
 	doTest := func(t *testing.T, value interface{}, expected string) {
-		writer := NewDefaultDataWriter()
-		writer.GotoNextPart()
-
-		err := codec.EncodeNested(writer, value)
+		codec := NewDefaultCodec()
+		encoded, err := codec.EncodeNested(value)
 		require.NoError(t, err)
-		require.Equal(t, expected, writer.String())
+		require.Equal(t, expected, hex.EncodeToString(encoded))
 	}
 
 	t.Run("u8", func(t *testing.T) {
@@ -55,9 +52,6 @@ func TestCodec_EncodeNested(t *testing.T) {
 	})
 
 	t.Run("struct", func(t *testing.T) {
-		writer := NewDefaultDataWriter()
-		writer.GotoNextPart()
-
 		fooStruct := StructValue{
 			Fields: []Field{
 				{
@@ -69,41 +63,26 @@ func TestCodec_EncodeNested(t *testing.T) {
 			},
 		}
 
-		err := codec.EncodeNested(writer, fooStruct)
-		require.NoError(t, err)
-		require.Equal(t, "014142", writer.String())
+		doTest(t, fooStruct, "014142")
 	})
 
 	t.Run("enum (discriminant == 0)", func(t *testing.T) {
-		writer := NewDefaultDataWriter()
-		writer.GotoNextPart()
-
 		fooEnum := EnumValue{
 			Discriminant: 0,
 		}
 
-		err := codec.EncodeNested(writer, fooEnum)
-		require.NoError(t, err)
-		require.Equal(t, "00", writer.String())
+		doTest(t, fooEnum, "00")
 	})
 
 	t.Run("enum (discriminant != 0)", func(t *testing.T) {
-		writer := NewDefaultDataWriter()
-		writer.GotoNextPart()
-
 		fooEnum := EnumValue{
 			Discriminant: 42,
 		}
 
-		err := codec.EncodeNested(writer, fooEnum)
-		require.NoError(t, err)
-		require.Equal(t, "2a", writer.String())
+		doTest(t, fooEnum, "2a")
 	})
 
 	t.Run("enum with fields", func(t *testing.T) {
-		writer := NewDefaultDataWriter()
-		writer.GotoNextPart()
-
 		fooEnum := EnumValue{
 			Discriminant: 42,
 			Fields: []Field{
@@ -116,64 +95,36 @@ func TestCodec_EncodeNested(t *testing.T) {
 			},
 		}
 
-		err := codec.EncodeNested(writer, fooEnum)
-		require.NoError(t, err)
-		require.Equal(t, "2a014142", writer.String())
+		doTest(t, fooEnum, "2a014142")
 	})
 }
 
 func TestCodec_EncodeTopLevel(t *testing.T) {
-	codec := NewDefaultCodec()
+	doTest := func(t *testing.T, value interface{}, expected string) {
+		codec := NewDefaultCodec()
+		encoded, err := codec.EncodeTopLevel(value)
+		require.NoError(t, err)
+		require.Equal(t, expected, hex.EncodeToString(encoded))
+	}
 
 	t.Run("u8", func(t *testing.T) {
-		writer := NewDefaultDataWriter()
-		writer.GotoNextPart()
-
-		err := codec.EncodeTopLevel(writer, U8Value{Value: 0x01})
-		require.NoError(t, err)
-		require.Equal(t, "01", writer.String())
-	})
-
-	t.Run("u8 (zero)", func(t *testing.T) {
-		writer := NewDefaultDataWriter()
-		writer.GotoNextPart()
-
-		err := codec.EncodeTopLevel(writer, U8Value{Value: 0})
-		require.NoError(t, err)
-		require.Equal(t, "", writer.String())
+		doTest(t, U8Value{Value: 0x00}, "")
+		doTest(t, U8Value{Value: 0x01}, "01")
 	})
 
 	t.Run("u16", func(t *testing.T) {
-		writer := NewDefaultDataWriter()
-		writer.GotoNextPart()
-
-		err := codec.EncodeTopLevel(writer, U16Value{Value: 0x0042})
-		require.NoError(t, err)
-		require.Equal(t, "42", writer.String())
+		doTest(t, U16Value{Value: 0x0042}, "42")
 	})
 
 	t.Run("u32", func(t *testing.T) {
-		writer := NewDefaultDataWriter()
-		writer.GotoNextPart()
-
-		err := codec.EncodeTopLevel(writer, U32Value{Value: 0x00004242})
-		require.NoError(t, err)
-		require.Equal(t, "4242", writer.String())
+		doTest(t, U32Value{Value: 0x00004242}, "4242")
 	})
 
 	t.Run("u64", func(t *testing.T) {
-		writer := NewDefaultDataWriter()
-		writer.GotoNextPart()
-
-		err := codec.EncodeTopLevel(writer, U64Value{Value: 0x0042434445464748})
-		require.NoError(t, err)
-		require.Equal(t, "42434445464748", writer.String())
+		doTest(t, U64Value{Value: 0x0042434445464748}, "42434445464748")
 	})
 
 	t.Run("struct", func(t *testing.T) {
-		writer := NewDefaultDataWriter()
-		writer.GotoNextPart()
-
 		fooStruct := StructValue{
 			Fields: []Field{
 				{
@@ -185,41 +136,26 @@ func TestCodec_EncodeTopLevel(t *testing.T) {
 			},
 		}
 
-		err := codec.EncodeTopLevel(writer, fooStruct)
-		require.NoError(t, err)
-		require.Equal(t, "014142", writer.String())
+		doTest(t, fooStruct, "014142")
 	})
 
 	t.Run("enum (discriminant == 0)", func(t *testing.T) {
-		writer := NewDefaultDataWriter()
-		writer.GotoNextPart()
-
 		fooEnum := EnumValue{
 			Discriminant: 0,
 		}
 
-		err := codec.EncodeTopLevel(writer, fooEnum)
-		require.NoError(t, err)
-		require.Equal(t, "", writer.String())
+		doTest(t, fooEnum, "")
 	})
 
 	t.Run("enum (discriminant != 0)", func(t *testing.T) {
-		writer := NewDefaultDataWriter()
-		writer.GotoNextPart()
-
 		fooEnum := EnumValue{
 			Discriminant: 42,
 		}
 
-		err := codec.EncodeTopLevel(writer, fooEnum)
-		require.NoError(t, err)
-		require.Equal(t, "2a", writer.String())
+		doTest(t, fooEnum, "2a")
 	})
 
 	t.Run("enum with fields", func(t *testing.T) {
-		writer := NewDefaultDataWriter()
-		writer.GotoNextPart()
-
 		fooEnum := EnumValue{
 			Discriminant: 42,
 			Fields: []Field{
@@ -232,9 +168,7 @@ func TestCodec_EncodeTopLevel(t *testing.T) {
 			},
 		}
 
-		err := codec.EncodeTopLevel(writer, fooEnum)
-		require.NoError(t, err)
-		require.Equal(t, "2a014142", writer.String())
+		doTest(t, fooEnum, "2a014142")
 	})
 }
 
