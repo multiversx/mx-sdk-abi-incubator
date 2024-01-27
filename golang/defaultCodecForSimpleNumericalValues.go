@@ -26,20 +26,20 @@ func (c *defaultCodec) encodeTopLevelI8(writer io.Writer, value I8Value) error {
 	return c.encodeTopLevelSignedNumber(writer, int64(value.Value))
 }
 
-func (c *defaultCodec) decodeNestedU8(reader dataReader, value *U8Value) error {
+func (c *defaultCodec) decodeNestedU8(reader *partReader, value *U8Value) error {
 	data, err := reader.Read(1)
 	if err != nil {
-		return newErrCodecCannotDecodeType("u8", err)
+		return err
 	}
 
 	value.Value = data[0]
 	return nil
 }
 
-func (c *defaultCodec) decodeTopLevelU8(reader dataReader, value *U8Value) error {
+func (c *defaultCodec) decodeTopLevelU8(reader *partReader, value *U8Value) error {
 	n, err := c.decodeTopLevelUnsignedNumber(reader, math.MaxUint8)
 	if err != nil {
-		return newErrCodecCannotDecodeType("u8", err)
+		return err
 	}
 
 	value.Value = uint8(n)
@@ -57,20 +57,20 @@ func (c *defaultCodec) encodeTopLevelU16(writer io.Writer, value U16Value) error
 	return c.encodeTopLevelUnsignedNumber(writer, uint64(value.Value))
 }
 
-func (c *defaultCodec) decodeNestedU16(reader dataReader, value *U16Value) error {
+func (c *defaultCodec) decodeNestedU16(reader *partReader, value *U16Value) error {
 	data, err := reader.Read(2)
 	if err != nil {
-		return newErrCodecCannotDecodeType("u16", err)
+		return err
 	}
 
 	value.Value = binary.BigEndian.Uint16(data)
 	return nil
 }
 
-func (c *defaultCodec) decodeTopLevelU16(reader dataReader, value *U16Value) error {
+func (c *defaultCodec) decodeTopLevelU16(reader *partReader, value *U16Value) error {
 	n, err := c.decodeTopLevelUnsignedNumber(reader, math.MaxUint16)
 	if err != nil {
-		return newErrCodecCannotDecodeType("u16", err)
+		return err
 	}
 
 	value.Value = uint16(n)
@@ -88,20 +88,20 @@ func (c *defaultCodec) encodeTopLevelU32(writer io.Writer, value U32Value) error
 	return c.encodeTopLevelUnsignedNumber(writer, uint64(value.Value))
 }
 
-func (c *defaultCodec) decodeNestedU32(reader dataReader, value *U32Value) error {
+func (c *defaultCodec) decodeNestedU32(reader *partReader, value *U32Value) error {
 	data, err := reader.Read(4)
 	if err != nil {
-		return newErrCodecCannotDecodeType("u32", err)
+		return err
 	}
 
 	value.Value = binary.BigEndian.Uint32(data)
 	return nil
 }
 
-func (c *defaultCodec) decodeTopLevelU32(reader dataReader, value *U32Value) error {
+func (c *defaultCodec) decodeTopLevelU32(reader *partReader, value *U32Value) error {
 	n, err := c.decodeTopLevelUnsignedNumber(reader, math.MaxUint32)
 	if err != nil {
-		return newErrCodecCannotDecodeType("u32", err)
+		return err
 	}
 
 	value.Value = uint32(n)
@@ -119,20 +119,20 @@ func (c *defaultCodec) encodeTopLevelU64(writer io.Writer, value U64Value) error
 	return c.encodeTopLevelUnsignedNumber(writer, uint64(value.Value))
 }
 
-func (c *defaultCodec) decodeNestedU64(reader dataReader, value *U64Value) error {
+func (c *defaultCodec) decodeNestedU64(reader *partReader, value *U64Value) error {
 	data, err := reader.Read(8)
 	if err != nil {
-		return newErrCodecCannotDecodeType("u64", err)
+		return err
 	}
 
 	value.Value = binary.BigEndian.Uint64(data)
 	return nil
 }
 
-func (c *defaultCodec) decodeTopLevelU64(reader dataReader, value *U64Value) error {
+func (c *defaultCodec) decodeTopLevelU64(reader *partReader, value *U64Value) error {
 	n, err := c.decodeTopLevelUnsignedNumber(reader, math.MaxUint64)
 	if err != nil {
-		return newErrCodecCannotDecodeType("u64", err)
+		return err
 	}
 
 	value.Value = uint64(n)
@@ -153,8 +153,8 @@ func (c *defaultCodec) encodeTopLevelSignedNumber(writer io.Writer, value int64)
 	return err
 }
 
-func (c *defaultCodec) decodeTopLevelUnsignedNumber(reader dataReader, maxValue uint64) (uint64, error) {
-	data, err := reader.ReadWholePart()
+func (c *defaultCodec) decodeTopLevelUnsignedNumber(reader *partReader, maxValue uint64) (uint64, error) {
+	data, err := reader.ReadWhole()
 	if err != nil {
 		return 0, err
 	}

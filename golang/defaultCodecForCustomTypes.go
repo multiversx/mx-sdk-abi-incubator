@@ -20,9 +20,9 @@ func (c *defaultCodec) encodeTopLevelStruct(writer io.Writer, value StructValue)
 }
 
 // See: https://docs.multiversx.com/developers/data/custom-types
-func (c *defaultCodec) decodeNestedStruct(reader dataReader, value *StructValue) error {
+func (c *defaultCodec) decodeNestedStruct(reader *partReader, value *StructValue) error {
 	for _, field := range value.Fields {
-		err := c.DecodeNested(reader, field.Value)
+		err := c.doDecodeNested(reader, field.Value)
 		if err != nil {
 			return err
 		}
@@ -32,7 +32,7 @@ func (c *defaultCodec) decodeNestedStruct(reader dataReader, value *StructValue)
 }
 
 // See: https://docs.multiversx.com/developers/data/custom-types
-func (c *defaultCodec) decodeTopLevelStruct(reader dataReader, value *StructValue) error {
+func (c *defaultCodec) decodeTopLevelStruct(reader *partReader, value *StructValue) error {
 	return c.decodeNestedStruct(reader, value)
 }
 
@@ -64,9 +64,9 @@ func (c *defaultCodec) encodeTopLevelEnum(writer io.Writer, value EnumValue) err
 }
 
 // See: https://docs.multiversx.com/developers/data/custom-types
-func (c *defaultCodec) decodeNestedEnum(reader dataReader, value *EnumValue) error {
+func (c *defaultCodec) decodeNestedEnum(reader *partReader, value *EnumValue) error {
 	discriminant := &U8Value{}
-	err := c.DecodeNested(reader, discriminant)
+	err := c.doDecodeNested(reader, discriminant)
 	if err != nil {
 		return err
 	}
@@ -74,7 +74,7 @@ func (c *defaultCodec) decodeNestedEnum(reader dataReader, value *EnumValue) err
 	value.Discriminant = discriminant.Value
 
 	for _, field := range value.Fields {
-		err := c.DecodeNested(reader, field.Value)
+		err := c.doDecodeNested(reader, field.Value)
 		if err != nil {
 			return err
 		}
@@ -84,8 +84,8 @@ func (c *defaultCodec) decodeNestedEnum(reader dataReader, value *EnumValue) err
 }
 
 // See: https://docs.multiversx.com/developers/data/custom-types
-func (c *defaultCodec) decodeTopLevelEnum(reader dataReader, value *EnumValue) error {
-	if reader.IsCurrentPartEmpty() {
+func (c *defaultCodec) decodeTopLevelEnum(reader *partReader, value *EnumValue) error {
+	if reader.IsPartEmpty() {
 		value.Discriminant = 0
 		return nil
 	}

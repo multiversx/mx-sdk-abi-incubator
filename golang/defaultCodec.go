@@ -2,6 +2,7 @@ package abi
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 )
 
@@ -13,13 +14,13 @@ func NewDefaultCodec() *defaultCodec {
 }
 
 func (c *defaultCodec) EncodeNested(value interface{}) ([]byte, error) {
-	writer := bytes.NewBuffer(nil)
-	err := c.doEncodeNested(writer, value)
+	buffer := bytes.NewBuffer(nil)
+	err := c.doEncodeNested(buffer, value)
 	if err != nil {
 		return nil, err
 	}
 
-	return writer.Bytes(), nil
+	return buffer.Bytes(), nil
 }
 
 func (c *defaultCodec) doEncodeNested(writer io.Writer, value interface{}) error {
@@ -37,18 +38,18 @@ func (c *defaultCodec) doEncodeNested(writer io.Writer, value interface{}) error
 	case EnumValue:
 		return c.encodeNestedEnum(writer, value.(EnumValue))
 	default:
-		return newErrUnsupportedType("defaultCodec.EncodeNested()", value)
+		return fmt.Errorf("unsupported type for nested encoding: %T", value)
 	}
 }
 
 func (c *defaultCodec) EncodeTopLevel(value interface{}) ([]byte, error) {
-	writer := bytes.NewBuffer(nil)
-	err := c.doEncodeTopLevel(writer, value)
+	buffer := bytes.NewBuffer(nil)
+	err := c.doEncodeTopLevel(buffer, value)
 	if err != nil {
 		return nil, err
 	}
 
-	return writer.Bytes(), nil
+	return buffer.Bytes(), nil
 }
 
 func (c *defaultCodec) doEncodeTopLevel(writer io.Writer, value interface{}) error {
@@ -66,11 +67,21 @@ func (c *defaultCodec) doEncodeTopLevel(writer io.Writer, value interface{}) err
 	case EnumValue:
 		return c.encodeTopLevelEnum(writer, value.(EnumValue))
 	default:
-		return newErrUnsupportedType("defaultCodec.EncodeTopLevel()", value)
+		return fmt.Errorf("unsupported type for top-level encoding: %T", value)
 	}
 }
 
-func (c *defaultCodec) DecodeNested(reader dataReader, value interface{}) error {
+func (c *defaultCodec) DecodeNested(data []byte, value interface{}) error {
+	reader := newPartReader(data)
+	err := c.doDecodeNested(reader, value)
+	if err != nil {
+		return fmt.Errorf("cannot decode (nested) %T, because of: %w", value, err)
+	}
+
+	return nil
+}
+
+func (c *defaultCodec) doDecodeNested(reader *partReader, value interface{}) error {
 	switch value.(type) {
 	case *U8Value:
 		return c.decodeNestedU8(reader, value.(*U8Value))
@@ -85,11 +96,21 @@ func (c *defaultCodec) DecodeNested(reader dataReader, value interface{}) error 
 	case *EnumValue:
 		return c.decodeNestedEnum(reader, value.(*EnumValue))
 	default:
-		return newErrUnsupportedType("defaultCodec.DecodeNested()", value)
+		return fmt.Errorf("unsupported type for nested decoding: %T", value)
 	}
 }
 
-func (c *defaultCodec) DecodeTopLevel(reader dataReader, value interface{}) error {
+func (c *defaultCodec) DecodeTopLevel(data []byte, value interface{}) error {
+	reader := newPartReader(data)
+	err := c.doDecodeTopLevel(reader, value)
+	if err != nil {
+		return fmt.Errorf("cannot decode (top-level) %T, because of: %w", value, err)
+	}
+
+	return nil
+}
+
+func (c *defaultCodec) doDecodeTopLevel(reader *partReader, value interface{}) error {
 	switch value.(type) {
 	case *U8Value:
 		return c.decodeTopLevelU8(reader, value.(*U8Value))
@@ -104,6 +125,6 @@ func (c *defaultCodec) DecodeTopLevel(reader dataReader, value interface{}) erro
 	case *EnumValue:
 		return c.decodeTopLevelEnum(reader, value.(*EnumValue))
 	default:
-		return newErrUnsupportedType("defaultCodec.DecodeTopLevel()", value)
+		return fmt.Errorf("unsupported type for top-level decoding: %T", value)
 	}
 }

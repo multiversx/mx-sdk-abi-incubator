@@ -134,7 +134,7 @@ func TestSerializer_Serialize(t *testing.T) {
 			U8Value{Value: 0x44},
 		})
 
-		require.ErrorIs(t, err, errVariadicMustBeLast)
+		require.ErrorContains(t, err, "variadic values must be last among input values")
 	})
 
 	t.Run("u8, variadic<u8>", func(t *testing.T) {
@@ -162,7 +162,7 @@ func TestSerializer_Deserialize(t *testing.T) {
 		reader, _ := NewDefaultDataReaderFromString("")
 
 		err := serializer.Deserialize(reader, []interface{}{nil})
-		require.ErrorIs(t, err, errNilOutputValue)
+		require.ErrorContains(t, err, "cannot deserialize into nil value")
 	})
 
 	t.Run("u8", func(t *testing.T) {
@@ -275,7 +275,7 @@ func TestSerializer_Deserialize(t *testing.T) {
 		}
 
 		err := serializer.Deserialize(reader, []interface{}{destination})
-		require.ErrorIs(t, err, errNilItemCreator)
+		require.ErrorContains(t, err, "cannot deserialize variadic values: item creator is nil")
 	})
 
 	t.Run("empty: u8", func(t *testing.T) {
@@ -353,6 +353,6 @@ func TestSerializer_Deserialize(t *testing.T) {
 		}
 
 		err := serializer.Deserialize(reader, []interface{}{destination})
-		require.ErrorContains(t, err, "cannot decode u8, because of: decoded value is too large: 256 > 255")
+		require.ErrorContains(t, err, "cannot decode (top-level) *abi.U8Value, because of: decoded value is too large: 256 > 255")
 	})
 }

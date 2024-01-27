@@ -1,6 +1,9 @@
 package abi
 
-import "io"
+import (
+	"errors"
+	"io"
+)
 
 type serializer struct {
 	codec codec
@@ -17,7 +20,7 @@ func (s *serializer) Serialize(writer dataWriter, inputValues []interface{}) err
 
 	for i, value := range inputValues {
 		if value == nil {
-			return errNilInputValue
+			return errors.New("cannot serialize nil value")
 		}
 
 		switch value.(type) {
@@ -25,7 +28,7 @@ func (s *serializer) Serialize(writer dataWriter, inputValues []interface{}) err
 			err = s.serializeInputMultiValue(writer, value.(InputMultiValue))
 		case InputVariadicValues:
 			if i != len(inputValues)-1 {
-				return errVariadicMustBeLast
+				return errors.New("variadic values must be last among input values")
 			}
 
 			err = s.serializeInputVariadicValues(writer, value.(InputVariadicValues))
@@ -47,7 +50,7 @@ func (s *serializer) Deserialize(reader dataReader, outputValues []interface{}) 
 
 	for i, value := range outputValues {
 		if value == nil {
-			return errNilOutputValue
+			return errors.New("cannot deserialize into nil value")
 		}
 
 		switch value.(type) {
@@ -55,7 +58,7 @@ func (s *serializer) Deserialize(reader dataReader, outputValues []interface{}) 
 			err = s.deserializeOutputMultiValue(reader, value.(*OutputMultiValue))
 		case *OutputVariadicValues:
 			if i != len(outputValues)-1 {
-				return errVariadicMustBeLast
+				return errors.New("variadic values must be last among output values")
 			}
 
 			err = s.deserializeOutputVariadicValues(reader, value.(*OutputVariadicValues))
@@ -116,7 +119,7 @@ func (s *serializer) deserializeOutputMultiValue(reader dataReader, value *Outpu
 
 func (s *serializer) deserializeOutputVariadicValues(reader dataReader, value *OutputVariadicValues) error {
 	if value.ItemCreator == nil {
-		return errNilItemCreator
+		return errors.New("cannot deserialize variadic values: item creator is nil")
 	}
 
 	for !reader.IsEndOfData() {
@@ -134,7 +137,12 @@ func (s *serializer) deserializeOutputVariadicValues(reader dataReader, value *O
 }
 
 func (s *serializer) deserializeDirectlyEncodableValue(reader dataReader, value interface{}) error {
-	err := s.codec.DecodeTopLevel(reader, value)
+	part, err := reader.ReadWholePart()
+	if err != nil {
+		return err
+	}
+
+	err = s.codec.DecodeTopLevel(part, value)
 	if err != nil {
 		return err
 	}

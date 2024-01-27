@@ -2,6 +2,7 @@ package abi
 
 import (
 	"encoding/hex"
+	"errors"
 	"strings"
 )
 
@@ -20,7 +21,7 @@ func NewDefaultDataWriter() *defaultDataWriter {
 
 func (d *defaultDataWriter) Write(data []byte) (int, error) {
 	if len(d.parts) == 0 {
-		return 0, errWriterCannotWriteSinceThereIsNoPart
+		return 0, errors.New("cannot write, since there is no part to write to")
 	}
 
 	partIndex := len(d.parts) - 1

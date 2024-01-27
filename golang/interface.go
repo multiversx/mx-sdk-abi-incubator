@@ -1,10 +1,8 @@
 package abi
 
 type dataReader interface {
-	Read(numBytes int) ([]byte, error)
 	ReadWholePart() ([]byte, error)
 	GotoNextPart() error
-	IsCurrentPartEmpty() bool
 	IsEndOfData() bool
 }
 
@@ -16,6 +14,6 @@ type dataWriter interface {
 type codec interface {
 	EncodeNested(value interface{}) ([]byte, error)
 	EncodeTopLevel(value interface{}) ([]byte, error)
-	DecodeNested(reader dataReader, value interface{}) error
-	DecodeTopLevel(reader dataReader, value interface{}) error
+	DecodeNested(data []byte, value interface{}) error
+	DecodeTopLevel(data []byte, value interface{}) error
 }
