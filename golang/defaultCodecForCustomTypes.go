@@ -1,6 +1,9 @@
 package abi
 
-import "io"
+import (
+	"bytes"
+	"io"
+)
 
 // https://docs.multiversx.com/developers/data/custom-types
 func (c *defaultCodec) encodeNestedStruct(writer io.Writer, value StructValue) error {
@@ -20,7 +23,7 @@ func (c *defaultCodec) encodeTopLevelStruct(writer io.Writer, value StructValue)
 }
 
 // See: https://docs.multiversx.com/developers/data/custom-types
-func (c *defaultCodec) decodeNestedStruct(reader *partReader, value *StructValue) error {
+func (c *defaultCodec) decodeNestedStruct(reader io.Reader, value *StructValue) error {
 	for _, field := range value.Fields {
 		err := c.doDecodeNested(reader, field.Value)
 		if err != nil {
@@ -32,7 +35,8 @@ func (c *defaultCodec) decodeNestedStruct(reader *partReader, value *StructValue
 }
 
 // See: https://docs.multiversx.com/developers/data/custom-types
-func (c *defaultCodec) decodeTopLevelStruct(reader *partReader, value *StructValue) error {
+func (c *defaultCodec) decodeTopLevelStruct(data []byte, value *StructValue) error {
+	reader := bytes.NewReader(data)
 	return c.decodeNestedStruct(reader, value)
 }
 
@@ -64,7 +68,7 @@ func (c *defaultCodec) encodeTopLevelEnum(writer io.Writer, value EnumValue) err
 }
 
 // See: https://docs.multiversx.com/developers/data/custom-types
-func (c *defaultCodec) decodeNestedEnum(reader *partReader, value *EnumValue) error {
+func (c *defaultCodec) decodeNestedEnum(reader io.Reader, value *EnumValue) error {
 	discriminant := &U8Value{}
 	err := c.doDecodeNested(reader, discriminant)
 	if err != nil {
@@ -84,11 +88,12 @@ func (c *defaultCodec) decodeNestedEnum(reader *partReader, value *EnumValue) er
 }
 
 // See: https://docs.multiversx.com/developers/data/custom-types
-func (c *defaultCodec) decodeTopLevelEnum(reader *partReader, value *EnumValue) error {
-	if reader.IsPartEmpty() {
+func (c *defaultCodec) decodeTopLevelEnum(data []byte, value *EnumValue) error {
+	if len(data) == 0 {
 		value.Discriminant = 0
 		return nil
 	}
 
+	reader := bytes.NewReader(data)
 	return c.decodeNestedEnum(reader, value)
 }

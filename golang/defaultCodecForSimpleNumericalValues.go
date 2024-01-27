@@ -26,8 +26,8 @@ func (c *defaultCodec) encodeTopLevelI8(writer io.Writer, value I8Value) error {
 	return c.encodeTopLevelSignedNumber(writer, int64(value.Value))
 }
 
-func (c *defaultCodec) decodeNestedU8(reader *partReader, value *U8Value) error {
-	data, err := reader.Read(1)
+func (c *defaultCodec) decodeNestedU8(reader io.Reader, value *U8Value) error {
+	data, err := readBytesExactly(reader, 1)
 	if err != nil {
 		return err
 	}
@@ -36,8 +36,8 @@ func (c *defaultCodec) decodeNestedU8(reader *partReader, value *U8Value) error 
 	return nil
 }
 
-func (c *defaultCodec) decodeTopLevelU8(reader *partReader, value *U8Value) error {
-	n, err := c.decodeTopLevelUnsignedNumber(reader, math.MaxUint8)
+func (c *defaultCodec) decodeTopLevelU8(data []byte, value *U8Value) error {
+	n, err := c.decodeTopLevelUnsignedNumber(data, math.MaxUint8)
 	if err != nil {
 		return err
 	}
@@ -57,8 +57,8 @@ func (c *defaultCodec) encodeTopLevelU16(writer io.Writer, value U16Value) error
 	return c.encodeTopLevelUnsignedNumber(writer, uint64(value.Value))
 }
 
-func (c *defaultCodec) decodeNestedU16(reader *partReader, value *U16Value) error {
-	data, err := reader.Read(2)
+func (c *defaultCodec) decodeNestedU16(reader io.Reader, value *U16Value) error {
+	data, err := readBytesExactly(reader, 2)
 	if err != nil {
 		return err
 	}
@@ -67,8 +67,8 @@ func (c *defaultCodec) decodeNestedU16(reader *partReader, value *U16Value) erro
 	return nil
 }
 
-func (c *defaultCodec) decodeTopLevelU16(reader *partReader, value *U16Value) error {
-	n, err := c.decodeTopLevelUnsignedNumber(reader, math.MaxUint16)
+func (c *defaultCodec) decodeTopLevelU16(data []byte, value *U16Value) error {
+	n, err := c.decodeTopLevelUnsignedNumber(data, math.MaxUint16)
 	if err != nil {
 		return err
 	}
@@ -88,8 +88,8 @@ func (c *defaultCodec) encodeTopLevelU32(writer io.Writer, value U32Value) error
 	return c.encodeTopLevelUnsignedNumber(writer, uint64(value.Value))
 }
 
-func (c *defaultCodec) decodeNestedU32(reader *partReader, value *U32Value) error {
-	data, err := reader.Read(4)
+func (c *defaultCodec) decodeNestedU32(reader io.Reader, value *U32Value) error {
+	data, err := readBytesExactly(reader, 4)
 	if err != nil {
 		return err
 	}
@@ -98,8 +98,8 @@ func (c *defaultCodec) decodeNestedU32(reader *partReader, value *U32Value) erro
 	return nil
 }
 
-func (c *defaultCodec) decodeTopLevelU32(reader *partReader, value *U32Value) error {
-	n, err := c.decodeTopLevelUnsignedNumber(reader, math.MaxUint32)
+func (c *defaultCodec) decodeTopLevelU32(data []byte, value *U32Value) error {
+	n, err := c.decodeTopLevelUnsignedNumber(data, math.MaxUint32)
 	if err != nil {
 		return err
 	}
@@ -119,8 +119,8 @@ func (c *defaultCodec) encodeTopLevelU64(writer io.Writer, value U64Value) error
 	return c.encodeTopLevelUnsignedNumber(writer, uint64(value.Value))
 }
 
-func (c *defaultCodec) decodeNestedU64(reader *partReader, value *U64Value) error {
-	data, err := reader.Read(8)
+func (c *defaultCodec) decodeNestedU64(reader io.Reader, value *U64Value) error {
+	data, err := readBytesExactly(reader, 8)
 	if err != nil {
 		return err
 	}
@@ -129,8 +129,8 @@ func (c *defaultCodec) decodeNestedU64(reader *partReader, value *U64Value) erro
 	return nil
 }
 
-func (c *defaultCodec) decodeTopLevelU64(reader *partReader, value *U64Value) error {
-	n, err := c.decodeTopLevelUnsignedNumber(reader, math.MaxUint64)
+func (c *defaultCodec) decodeTopLevelU64(data []byte, value *U64Value) error {
+	n, err := c.decodeTopLevelUnsignedNumber(data, math.MaxUint64)
 	if err != nil {
 		return err
 	}
@@ -153,12 +153,7 @@ func (c *defaultCodec) encodeTopLevelSignedNumber(writer io.Writer, value int64)
 	return err
 }
 
-func (c *defaultCodec) decodeTopLevelUnsignedNumber(reader *partReader, maxValue uint64) (uint64, error) {
-	data, err := reader.ReadWhole()
-	if err != nil {
-		return 0, err
-	}
-
+func (c *defaultCodec) decodeTopLevelUnsignedNumber(data []byte, maxValue uint64) (uint64, error) {
 	b := big.NewInt(0).SetBytes(data)
 	if !b.IsUint64() {
 		return 0, fmt.Errorf("decoded value is too large (does not fit an uint64): %s", b)

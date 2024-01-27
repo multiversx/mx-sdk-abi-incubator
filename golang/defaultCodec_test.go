@@ -216,7 +216,7 @@ func TestCodec_DecodeNested(t *testing.T) {
 		destination := &U16Value{}
 
 		err := codec.DecodeNested(data, destination)
-		require.ErrorContains(t, err, "cannot read 2 bytes")
+		require.ErrorContains(t, err, "cannot read exactly 2 bytes")
 	})
 
 	t.Run("u32, should err because it cannot read 4 bytes", func(t *testing.T) {
@@ -224,7 +224,7 @@ func TestCodec_DecodeNested(t *testing.T) {
 		destination := &U32Value{}
 
 		err := codec.DecodeNested(data, destination)
-		require.ErrorContains(t, err, "cannot read 4 bytes")
+		require.ErrorContains(t, err, "cannot read exactly 4 bytes")
 	})
 
 	t.Run("u64, should err because it cannot read 8 bytes", func(t *testing.T) {
@@ -232,7 +232,7 @@ func TestCodec_DecodeNested(t *testing.T) {
 		destination := &U64Value{}
 
 		err := codec.DecodeNested(data, destination)
-		require.ErrorContains(t, err, "cannot read 8 bytes")
+		require.ErrorContains(t, err, "cannot read exactly 8 bytes")
 	})
 
 	t.Run("struct", func(t *testing.T) {
