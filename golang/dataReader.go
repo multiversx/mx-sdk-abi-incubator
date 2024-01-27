@@ -6,18 +6,18 @@ import (
 	"strings"
 )
 
-type defaultDataReader struct {
+type dataReader struct {
 	parts     [][]byte
 	partIndex int
 }
 
-func NewDefaultDataReader(parts [][]byte) *defaultDataReader {
-	return &defaultDataReader{
+func newDataReader(parts [][]byte) *dataReader {
+	return &dataReader{
 		parts: parts,
 	}
 }
 
-func NewDefaultDataReaderFromString(encoded string) (*defaultDataReader, error) {
+func newDataReaderFromString(encoded string) (*dataReader, error) {
 	partsHex := strings.Split(encoded, partsSeparator)
 	parts := make([][]byte, len(partsHex))
 
@@ -30,33 +30,33 @@ func NewDefaultDataReaderFromString(encoded string) (*defaultDataReader, error) 
 		parts[i] = part
 	}
 
-	return &defaultDataReader{
+	return &dataReader{
 		parts: parts,
 	}, nil
 }
 
-func (d *defaultDataReader) ReadWholePart() ([]byte, error) {
-	if d.IsEndOfData() {
-		return nil, fmt.Errorf("cannot wholly read part %d: unexpected end of data", d.partIndex)
+func (reader *dataReader) ReadWholePart() ([]byte, error) {
+	if reader.IsEndOfData() {
+		return nil, fmt.Errorf("cannot wholly read part %d: unexpected end of data", reader.partIndex)
 	}
 
-	part := d.parts[d.partIndex]
+	part := reader.parts[reader.partIndex]
 	return part, nil
 }
 
-func (d *defaultDataReader) GotoNextPart() error {
-	if d.IsEndOfData() {
+func (reader *dataReader) GotoNextPart() error {
+	if reader.IsEndOfData() {
 		return fmt.Errorf(
 			"cannot advance to next part, since the reader is already beyond the last part; current part is %d",
-			d.partIndex,
+			reader.partIndex,
 		)
 	}
 
-	d.partIndex++
+	reader.partIndex++
 	return nil
 }
 
 // IsEndOfData returns true if the reader is already beyond the last part.
-func (d *defaultDataReader) IsEndOfData() bool {
-	return d.partIndex >= len(d.parts)
+func (reader *dataReader) IsEndOfData() bool {
+	return reader.partIndex >= len(reader.parts)
 }

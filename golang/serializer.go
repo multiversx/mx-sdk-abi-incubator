@@ -15,7 +15,18 @@ func NewSerializer(codec codec) *serializer {
 	}
 }
 
-func (s *serializer) Serialize(writer dataWriter, inputValues []interface{}) error {
+func (s *serializer) Serialize(inputValues []interface{}) (string, error) {
+	writer := newDataWriter()
+
+	err := s.doSerialize(writer, inputValues)
+	if err != nil {
+		return "", err
+	}
+
+	return writer.String(), nil
+}
+
+func (s *serializer) doSerialize(writer *dataWriter, inputValues []interface{}) error {
 	var err error
 
 	for i, value := range inputValues {
@@ -45,7 +56,21 @@ func (s *serializer) Serialize(writer dataWriter, inputValues []interface{}) err
 	return nil
 }
 
-func (s *serializer) Deserialize(reader dataReader, outputValues []interface{}) error {
+func (s *serializer) Deserialize(data string, outputValues []interface{}) error {
+	reader, err := newDataReaderFromString(data)
+	if err != nil {
+		return err
+	}
+
+	err = s.doDeserialize(reader, outputValues)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *serializer) doDeserialize(reader *dataReader, outputValues []interface{}) error {
 	var err error
 
 	for i, value := range outputValues {
@@ -74,9 +99,9 @@ func (s *serializer) Deserialize(reader dataReader, outputValues []interface{}) 
 	return nil
 }
 
-func (s *serializer) serializeInputMultiValue(writer dataWriter, value InputMultiValue) error {
+func (s *serializer) serializeInputMultiValue(writer *dataWriter, value InputMultiValue) error {
 	for _, item := range value.Items {
-		err := s.Serialize(writer, []interface{}{item})
+		err := s.doSerialize(writer, []interface{}{item})
 		if err != nil {
 			return err
 		}
@@ -85,9 +110,9 @@ func (s *serializer) serializeInputMultiValue(writer dataWriter, value InputMult
 	return nil
 }
 
-func (s *serializer) serializeInputVariadicValues(writer dataWriter, value InputVariadicValues) error {
+func (s *serializer) serializeInputVariadicValues(writer *dataWriter, value InputVariadicValues) error {
 	for _, item := range value.Items {
-		err := s.Serialize(writer, []interface{}{item})
+		err := s.doSerialize(writer, []interface{}{item})
 		if err != nil {
 			return err
 		}
@@ -106,9 +131,9 @@ func (s *serializer) serializeDirectlyEncodableValue(writer io.Writer, value int
 	return err
 }
 
-func (s *serializer) deserializeOutputMultiValue(reader dataReader, value *OutputMultiValue) error {
+func (s *serializer) deserializeOutputMultiValue(reader *dataReader, value *OutputMultiValue) error {
 	for _, item := range value.Items {
-		err := s.Deserialize(reader, []interface{}{item})
+		err := s.doDeserialize(reader, []interface{}{item})
 		if err != nil {
 			return err
 		}
@@ -117,7 +142,7 @@ func (s *serializer) deserializeOutputMultiValue(reader dataReader, value *Outpu
 	return nil
 }
 
-func (s *serializer) deserializeOutputVariadicValues(reader dataReader, value *OutputVariadicValues) error {
+func (s *serializer) deserializeOutputVariadicValues(reader *dataReader, value *OutputVariadicValues) error {
 	if value.ItemCreator == nil {
 		return errors.New("cannot deserialize variadic values: item creator is nil")
 	}
@@ -125,7 +150,7 @@ func (s *serializer) deserializeOutputVariadicValues(reader dataReader, value *O
 	for !reader.IsEndOfData() {
 		newItem := value.ItemCreator()
 
-		err := s.Deserialize(reader, []interface{}{newItem})
+		err := s.doDeserialize(reader, []interface{}{newItem})
 		if err != nil {
 			return err
 		}
@@ -136,7 +161,7 @@ func (s *serializer) deserializeOutputVariadicValues(reader dataReader, value *O
 	return nil
 }
 
-func (s *serializer) deserializeDirectlyEncodableValue(reader dataReader, value interface{}) error {
+func (s *serializer) deserializeDirectlyEncodableValue(reader *dataReader, value interface{}) error {
 	part, err := reader.ReadWholePart()
 	if err != nil {
 		return err
