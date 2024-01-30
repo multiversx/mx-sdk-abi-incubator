@@ -8,14 +8,16 @@ import (
 )
 
 type partsHolder struct {
-	parts [][]byte
+	parts            [][]byte
+	focusedPartIndex uint32
 }
 
 // A newly-created holder has no parts.
 // Parts are created by calling appendEmptyPart().
 func newEmptyPartsHolder() *partsHolder {
 	return &partsHolder{
-		parts: [][]byte{},
+		parts:            [][]byte{},
+		focusedPartIndex: 0,
 	}
 }
 
@@ -37,8 +39,8 @@ func newPartsHolderFromHex(encoded string) (*partsHolder, error) {
 	}, nil
 }
 
-func (holder *partsHolder) hasAnyPart() bool {
-	return len(holder.parts) > 0
+func (holder *partsHolder) getParts() [][]byte {
+	return holder.parts
 }
 
 func (holder *partsHolder) getNumParts() uint32 {
@@ -62,12 +64,12 @@ func (holder *partsHolder) appendToLastPart(data []byte) error {
 	return nil
 }
 
-func (holder *partsHolder) appendEmptyPart() {
-	holder.parts = append(holder.parts, []byte{})
+func (holder *partsHolder) hasAnyPart() bool {
+	return len(holder.parts) > 0
 }
 
-func (holder *partsHolder) getParts() [][]byte {
-	return holder.parts
+func (holder *partsHolder) appendEmptyPart() {
+	holder.parts = append(holder.parts, []byte{})
 }
 
 func (holder *partsHolder) encodeToHex() string {
@@ -80,24 +82,12 @@ func (holder *partsHolder) encodeToHex() string {
 	return strings.Join(partsHex, partsSeparator)
 }
 
-type partsReader struct {
-	holder           *partsHolder
-	currentPartIndex uint32
-}
-
-func newPartsReader(holder *partsHolder) *partsReader {
-	return &partsReader{
-		holder:           holder,
-		currentPartIndex: 0,
-	}
-}
-
-func (reader *partsReader) readWholePart() ([]byte, error) {
-	if reader.isEndOfData() {
-		return nil, fmt.Errorf("cannot wholly read part %d: unexpected end of data", reader.currentPartIndex)
+func (holder *partsHolder) readWholePart() ([]byte, error) {
+	if holder.isFocusedBeyondLastPart() {
+		return nil, fmt.Errorf("cannot wholly read part %d: unexpected end of data", holder.focusedPartIndex)
 	}
 
-	part, err := reader.holder.getPart(uint32(reader.currentPartIndex))
+	part, err := holder.getPart(uint32(holder.focusedPartIndex))
 	if err != nil {
 		return nil, err
 	}
@@ -105,19 +95,19 @@ func (reader *partsReader) readWholePart() ([]byte, error) {
 	return part, nil
 }
 
-func (reader *partsReader) gotoNextPart() error {
-	if reader.isEndOfData() {
+func (holder *partsHolder) focusOnNextPart() error {
+	if holder.isFocusedBeyondLastPart() {
 		return fmt.Errorf(
-			"cannot advance to next part, since the reader is already beyond the last part; current part is %d",
-			reader.currentPartIndex,
+			"cannot focus on next part, since the focus is already beyond the last part; focused part index is %d",
+			holder.focusedPartIndex,
 		)
 	}
 
-	reader.currentPartIndex++
+	holder.focusedPartIndex++
 	return nil
 }
 
-// isEndOfData returns true if the reader is already beyond the last part.
-func (reader *partsReader) isEndOfData() bool {
-	return reader.currentPartIndex >= reader.holder.getNumParts()
+// isFocusedBeyondLastPart returns true if the reader is already beyond the last part.
+func (holder *partsHolder) isFocusedBeyondLastPart() bool {
+	return holder.focusedPartIndex >= holder.getNumParts()
 }
