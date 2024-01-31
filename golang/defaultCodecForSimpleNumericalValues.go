@@ -5,49 +5,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"math"
 	"math/big"
 )
-
-func (c *defaultCodec) decodeTopLevelU8(data []byte, value *U8Value) error {
-	n, err := c.decodeTopLevelUnsignedNumber(data, math.MaxUint8)
-	if err != nil {
-		return err
-	}
-
-	value.Value = uint8(n)
-	return nil
-}
-
-func (c *defaultCodec) decodeTopLevelU16(data []byte, value *U16Value) error {
-	n, err := c.decodeTopLevelUnsignedNumber(data, math.MaxUint16)
-	if err != nil {
-		return err
-	}
-
-	value.Value = uint16(n)
-	return nil
-}
-
-func (c *defaultCodec) decodeTopLevelU32(data []byte, value *U32Value) error {
-	n, err := c.decodeTopLevelUnsignedNumber(data, math.MaxUint32)
-	if err != nil {
-		return err
-	}
-
-	value.Value = uint32(n)
-	return nil
-}
-
-func (c *defaultCodec) decodeTopLevelU64(data []byte, value *U64Value) error {
-	n, err := c.decodeTopLevelUnsignedNumber(data, math.MaxUint64)
-	if err != nil {
-		return err
-	}
-
-	value.Value = uint64(n)
-	return nil
-}
 
 func (c *defaultCodec) encodeNestedNumber(writer io.Writer, value any, numBytes int) error {
 	buffer := new(bytes.Buffer)
@@ -106,6 +65,20 @@ func (c *defaultCodec) decodeTopLevelUnsignedNumber(data []byte, maxValue uint64
 	}
 
 	n := b.Uint64()
+	if n > maxValue {
+		return 0, fmt.Errorf("decoded value is too large: %d > %d", n, maxValue)
+	}
+
+	return n, nil
+}
+
+func (c *defaultCodec) decodeTopLevelSignedNumber(data []byte, maxValue int64) (int64, error) {
+	b := big.NewInt(0).SetBytes(data)
+	if !b.IsInt64() {
+		return 0, fmt.Errorf("decoded value is too large (does not fit an int64): %s", b)
+	}
+
+	n := b.Int64()
 	if n > maxValue {
 		return 0, fmt.Errorf("decoded value is too large: %d > %d", n, maxValue)
 	}

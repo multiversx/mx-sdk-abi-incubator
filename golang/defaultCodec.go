@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"math"
 )
 
 type defaultCodec struct {
@@ -136,13 +137,62 @@ func (c *defaultCodec) DecodeTopLevel(data []byte, value interface{}) error {
 func (c *defaultCodec) doDecodeTopLevel(data []byte, value interface{}) error {
 	switch value.(type) {
 	case *U8Value:
-		return c.decodeTopLevelU8(data, value.(*U8Value))
+		n, err := c.decodeTopLevelUnsignedNumber(data, math.MaxUint8)
+		if err != nil {
+			return err
+		}
+
+		value.(*U8Value).Value = uint8(n)
 	case *U16Value:
-		return c.decodeTopLevelU16(data, value.(*U16Value))
+		n, err := c.decodeTopLevelUnsignedNumber(data, math.MaxUint16)
+		if err != nil {
+			return err
+		}
+
+		value.(*U16Value).Value = uint16(n)
 	case *U32Value:
-		return c.decodeTopLevelU32(data, value.(*U32Value))
+		n, err := c.decodeTopLevelUnsignedNumber(data, math.MaxUint32)
+		if err != nil {
+			return err
+		}
+
+		value.(*U32Value).Value = uint32(n)
 	case *U64Value:
-		return c.decodeTopLevelU64(data, value.(*U64Value))
+		n, err := c.decodeTopLevelUnsignedNumber(data, math.MaxUint64)
+		if err != nil {
+			return err
+		}
+
+		value.(*U64Value).Value = uint64(n)
+	case *I8Value:
+		n, err := c.decodeTopLevelSignedNumber(data, math.MaxInt8)
+		if err != nil {
+			return err
+		}
+
+		value.(*I8Value).Value = int8(n)
+	case *I16Value:
+		n, err := c.decodeTopLevelSignedNumber(data, math.MaxInt16)
+		if err != nil {
+			return err
+		}
+
+		value.(*I16Value).Value = int16(n)
+	case *I32Value:
+		n, err := c.decodeTopLevelSignedNumber(data, math.MaxInt32)
+		if err != nil {
+			return err
+		}
+
+		value.(*I32Value).Value = int32(n)
+
+	case *I64Value:
+		n, err := c.decodeTopLevelSignedNumber(data, math.MaxInt64)
+		if err != nil {
+			return err
+		}
+
+		value.(*I64Value).Value = int64(n)
 	case *StructValue:
 		return c.decodeTopLevelStruct(data, value.(*StructValue))
 	case *EnumValue:
@@ -150,4 +200,6 @@ func (c *defaultCodec) doDecodeTopLevel(data []byte, value interface{}) error {
 	default:
 		return fmt.Errorf("unsupported type for top-level decoding: %T", value)
 	}
+
+	return nil
 }
