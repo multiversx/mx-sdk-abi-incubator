@@ -66,7 +66,7 @@ func (holder *partsHolder) appendEmptyPart() {
 	holder.parts = append(holder.parts, []byte{})
 }
 
-// readWholeFocusedPart reads the whole focused part (if any).
+// readWholeFocusedPart reads the whole focused part, if any. Otherwise, it returns an error.
 func (holder *partsHolder) readWholeFocusedPart() ([]byte, error) {
 	if holder.isFocusedBeyondLastPart() {
 		return nil, fmt.Errorf("cannot wholly read part %d: unexpected end of data", holder.focusedPartIndex)
@@ -80,6 +80,7 @@ func (holder *partsHolder) readWholeFocusedPart() ([]byte, error) {
 	return part, nil
 }
 
+// focusOnNextPart focuses on the next part, if any. Otherwise, it returns an error.
 func (holder *partsHolder) focusOnNextPart() error {
 	if holder.isFocusedBeyondLastPart() {
 		return fmt.Errorf(
@@ -92,7 +93,7 @@ func (holder *partsHolder) focusOnNextPart() error {
 	return nil
 }
 
-// isFocusedBeyondLastPart returns true if the reader is already beyond the last part.
+// isFocusedBeyondLastPart returns true if the focus is already beyond the last part.
 func (holder *partsHolder) isFocusedBeyondLastPart() bool {
 	return holder.focusedPartIndex >= holder.getNumParts()
 }

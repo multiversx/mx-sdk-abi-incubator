@@ -26,13 +26,21 @@ func (c *defaultCodec) EncodeNested(value interface{}) ([]byte, error) {
 func (c *defaultCodec) doEncodeNested(writer io.Writer, value interface{}) error {
 	switch value.(type) {
 	case U8Value:
-		return c.encodeNestedU8(writer, value.(U8Value))
+		return c.encodeNestedNumber(writer, value.(U8Value).Value, 1)
 	case U16Value:
-		return c.encodeNestedU16(writer, value.(U16Value))
+		return c.encodeNestedNumber(writer, value.(U16Value).Value, 2)
 	case U32Value:
-		return c.encodeNestedU32(writer, value.(U32Value))
+		return c.encodeNestedNumber(writer, value.(U32Value).Value, 4)
 	case U64Value:
-		return c.encodeNestedU64(writer, value.(U64Value))
+		return c.encodeNestedNumber(writer, value.(U64Value).Value, 8)
+	case I8Value:
+		return c.encodeNestedNumber(writer, value.(I8Value).Value, 1)
+	case I16Value:
+		return c.encodeNestedNumber(writer, value.(I16Value).Value, 2)
+	case I32Value:
+		return c.encodeNestedNumber(writer, value.(I32Value).Value, 4)
+	case I64Value:
+		return c.encodeNestedNumber(writer, value.(I64Value).Value, 8)
 	case StructValue:
 		return c.encodeNestedStruct(writer, value.(StructValue))
 	case EnumValue:
@@ -55,13 +63,21 @@ func (c *defaultCodec) EncodeTopLevel(value interface{}) ([]byte, error) {
 func (c *defaultCodec) doEncodeTopLevel(writer io.Writer, value interface{}) error {
 	switch value.(type) {
 	case U8Value:
-		return c.encodeTopLevelU8(writer, value.(U8Value))
+		return c.encodeTopLevelUnsignedNumber(writer, uint64(value.(U8Value).Value))
 	case U16Value:
-		return c.encodeTopLevelU16(writer, value.(U16Value))
+		return c.encodeTopLevelUnsignedNumber(writer, uint64(value.(U16Value).Value))
 	case U32Value:
-		return c.encodeTopLevelU32(writer, value.(U32Value))
+		return c.encodeTopLevelUnsignedNumber(writer, uint64(value.(U32Value).Value))
 	case U64Value:
-		return c.encodeTopLevelU64(writer, value.(U64Value))
+		return c.encodeTopLevelUnsignedNumber(writer, value.(U64Value).Value)
+	case I8Value:
+		return c.encodeTopLevelSignedNumber(writer, int64(value.(I8Value).Value))
+	case I16Value:
+		return c.encodeTopLevelSignedNumber(writer, int64(value.(I16Value).Value))
+	case I32Value:
+		return c.encodeTopLevelSignedNumber(writer, int64(value.(I32Value).Value))
+	case I64Value:
+		return c.encodeTopLevelSignedNumber(writer, value.(I64Value).Value)
 	case StructValue:
 		return c.encodeTopLevelStruct(writer, value.(StructValue))
 	case EnumValue:
