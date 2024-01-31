@@ -100,13 +100,21 @@ func (c *defaultCodec) DecodeNested(data []byte, value interface{}) error {
 func (c *defaultCodec) doDecodeNested(reader io.Reader, value interface{}) error {
 	switch value.(type) {
 	case *U8Value:
-		return c.decodeNestedU8(reader, value.(*U8Value))
+		return c.decodeNestedNumber(reader, &value.(*U8Value).Value, 1)
 	case *U16Value:
-		return c.decodeNestedU16(reader, value.(*U16Value))
+		return c.decodeNestedNumber(reader, &value.(*U16Value).Value, 2)
 	case *U32Value:
-		return c.decodeNestedU32(reader, value.(*U32Value))
+		return c.decodeNestedNumber(reader, &value.(*U32Value).Value, 4)
 	case *U64Value:
-		return c.decodeNestedU64(reader, value.(*U64Value))
+		return c.decodeNestedNumber(reader, &value.(*U64Value).Value, 8)
+	case *I8Value:
+		return c.decodeNestedNumber(reader, &value.(*I8Value).Value, 1)
+	case *I16Value:
+		return c.decodeNestedNumber(reader, &value.(*I16Value).Value, 2)
+	case *I32Value:
+		return c.decodeNestedNumber(reader, &value.(*I32Value).Value, 4)
+	case *I64Value:
+		return c.decodeNestedNumber(reader, &value.(*I64Value).Value, 8)
 	case *StructValue:
 		return c.decodeNestedStruct(reader, value.(*StructValue))
 	case *EnumValue:

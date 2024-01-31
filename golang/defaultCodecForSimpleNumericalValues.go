@@ -9,16 +9,6 @@ import (
 	"math/big"
 )
 
-func (c *defaultCodec) decodeNestedU8(reader io.Reader, value *U8Value) error {
-	data, err := readBytesExactly(reader, 1)
-	if err != nil {
-		return err
-	}
-
-	value.Value = data[0]
-	return nil
-}
-
 func (c *defaultCodec) decodeTopLevelU8(data []byte, value *U8Value) error {
 	n, err := c.decodeTopLevelUnsignedNumber(data, math.MaxUint8)
 	if err != nil {
@@ -26,16 +16,6 @@ func (c *defaultCodec) decodeTopLevelU8(data []byte, value *U8Value) error {
 	}
 
 	value.Value = uint8(n)
-	return nil
-}
-
-func (c *defaultCodec) decodeNestedU16(reader io.Reader, value *U16Value) error {
-	data, err := readBytesExactly(reader, 2)
-	if err != nil {
-		return err
-	}
-
-	value.Value = binary.BigEndian.Uint16(data)
 	return nil
 }
 
@@ -49,16 +29,6 @@ func (c *defaultCodec) decodeTopLevelU16(data []byte, value *U16Value) error {
 	return nil
 }
 
-func (c *defaultCodec) decodeNestedU32(reader io.Reader, value *U32Value) error {
-	data, err := readBytesExactly(reader, 4)
-	if err != nil {
-		return err
-	}
-
-	value.Value = binary.BigEndian.Uint32(data)
-	return nil
-}
-
 func (c *defaultCodec) decodeTopLevelU32(data []byte, value *U32Value) error {
 	n, err := c.decodeTopLevelUnsignedNumber(data, math.MaxUint32)
 	if err != nil {
@@ -66,16 +36,6 @@ func (c *defaultCodec) decodeTopLevelU32(data []byte, value *U32Value) error {
 	}
 
 	value.Value = uint32(n)
-	return nil
-}
-
-func (c *defaultCodec) decodeNestedU64(reader io.Reader, value *U64Value) error {
-	data, err := readBytesExactly(reader, 8)
-	if err != nil {
-		return err
-	}
-
-	value.Value = binary.BigEndian.Uint64(data)
 	return nil
 }
 
@@ -103,7 +63,26 @@ func (c *defaultCodec) encodeNestedNumber(writer io.Writer, value any, numBytes 
 	}
 
 	_, err = writer.Write(data)
-	return err
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *defaultCodec) decodeNestedNumber(reader io.Reader, value any, numBytes int) error {
+	data, err := readBytesExactly(reader, numBytes)
+	if err != nil {
+		return err
+	}
+
+	buffer := bytes.NewReader(data)
+	err = binary.Read(buffer, binary.BigEndian, value)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c *defaultCodec) encodeTopLevelUnsignedNumber(writer io.Writer, value uint64) error {
