@@ -17,12 +17,10 @@ func (c *defaultCodec) encodeNestedStruct(writer io.Writer, value StructValue) e
 	return nil
 }
 
-// https://docs.multiversx.com/developers/data/custom-types
 func (c *defaultCodec) encodeTopLevelStruct(writer io.Writer, value StructValue) error {
 	return c.encodeNestedStruct(writer, value)
 }
 
-// See: https://docs.multiversx.com/developers/data/custom-types
 func (c *defaultCodec) decodeNestedStruct(reader io.Reader, value *StructValue) error {
 	for _, field := range value.Fields {
 		err := c.doDecodeNested(reader, field.Value)
@@ -34,13 +32,11 @@ func (c *defaultCodec) decodeNestedStruct(reader io.Reader, value *StructValue) 
 	return nil
 }
 
-// See: https://docs.multiversx.com/developers/data/custom-types
 func (c *defaultCodec) decodeTopLevelStruct(data []byte, value *StructValue) error {
 	reader := bytes.NewReader(data)
 	return c.decodeNestedStruct(reader, value)
 }
 
-// See: https://docs.multiversx.com/developers/data/custom-types
 func (c *defaultCodec) encodeNestedEnum(writer io.Writer, value EnumValue) error {
 	err := c.doEncodeNested(writer, U8Value{value.Discriminant})
 	if err != nil {
@@ -57,7 +53,6 @@ func (c *defaultCodec) encodeNestedEnum(writer io.Writer, value EnumValue) error
 	return nil
 }
 
-// See: https://docs.multiversx.com/developers/data/custom-types
 func (c *defaultCodec) encodeTopLevelEnum(writer io.Writer, value EnumValue) error {
 	if value.Discriminant == 0 && len(value.Fields) == 0 {
 		// Write nothing
@@ -67,7 +62,6 @@ func (c *defaultCodec) encodeTopLevelEnum(writer io.Writer, value EnumValue) err
 	return c.encodeNestedEnum(writer, value)
 }
 
-// See: https://docs.multiversx.com/developers/data/custom-types
 func (c *defaultCodec) decodeNestedEnum(reader io.Reader, value *EnumValue) error {
 	discriminant := &U8Value{}
 	err := c.doDecodeNested(reader, discriminant)
@@ -87,7 +81,6 @@ func (c *defaultCodec) decodeNestedEnum(reader io.Reader, value *EnumValue) erro
 	return nil
 }
 
-// See: https://docs.multiversx.com/developers/data/custom-types
 func (c *defaultCodec) decodeTopLevelEnum(data []byte, value *EnumValue) error {
 	if len(data) == 0 {
 		value.Discriminant = 0

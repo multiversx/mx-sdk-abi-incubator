@@ -7,9 +7,16 @@ import (
 	"math"
 )
 
+// defaultCodec is the default codec for encoding and decoding values.
+//
+// See:
+// - https://docs.multiversx.com/developers/data/simple-values
+// - https://docs.multiversx.com/developers/data/composite-values
+// - https://docs.multiversx.com/developers/data/custom-types
 type defaultCodec struct {
 }
 
+// NewDefaultCodec creates a new default codec.
 func NewDefaultCodec() *defaultCodec {
 	return &defaultCodec{}
 }
@@ -42,6 +49,8 @@ func (c *defaultCodec) doEncodeNested(writer io.Writer, value interface{}) error
 		return c.encodeNestedNumber(writer, value.(I32Value).Value, 4)
 	case I64Value:
 		return c.encodeNestedNumber(writer, value.(I64Value).Value, 8)
+	case BigIntValue:
+		return c.encodeNestedBigNumber(writer, value.(BigIntValue).Value)
 	case StructValue:
 		return c.encodeNestedStruct(writer, value.(StructValue))
 	case EnumValue:
@@ -79,6 +88,8 @@ func (c *defaultCodec) doEncodeTopLevel(writer io.Writer, value interface{}) err
 		return c.encodeTopLevelSignedNumber(writer, int64(value.(I32Value).Value))
 	case I64Value:
 		return c.encodeTopLevelSignedNumber(writer, value.(I64Value).Value)
+	case BigIntValue:
+		return c.encodeTopLevelBigNumber(writer, value.(BigIntValue).Value)
 	case StructValue:
 		return c.encodeTopLevelStruct(writer, value.(StructValue))
 	case EnumValue:
@@ -116,6 +127,14 @@ func (c *defaultCodec) doDecodeNested(reader io.Reader, value interface{}) error
 		return c.decodeNestedNumber(reader, &value.(*I32Value).Value, 4)
 	case *I64Value:
 		return c.decodeNestedNumber(reader, &value.(*I64Value).Value, 8)
+	case *BigIntValue:
+		n, err := c.decodeNestedBigNumber(reader)
+		if err != nil {
+			return err
+		}
+
+		value.(*BigIntValue).Value = n
+		return nil
 	case *StructValue:
 		return c.decodeNestedStruct(reader, value.(*StructValue))
 	case *EnumValue:
@@ -193,6 +212,13 @@ func (c *defaultCodec) doDecodeTopLevel(data []byte, value interface{}) error {
 		}
 
 		value.(*I64Value).Value = int64(n)
+	case *BigIntValue:
+		n, err := c.decodeTopLevelBigNumber(data)
+		if err != nil {
+			return err
+		}
+
+		value.(*BigIntValue).Value = n
 	case *StructValue:
 		return c.decodeTopLevelStruct(data, value.(*StructValue))
 	case *EnumValue:

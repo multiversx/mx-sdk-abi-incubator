@@ -1,5 +1,7 @@
 package abi
 
+import "math/big"
+
 type U8Value struct {
 	Value uint8
 }
@@ -30,6 +32,10 @@ type I32Value struct {
 
 type I64Value struct {
 	Value int64
+}
+
+type BigIntValue struct {
+	Value *big.Int
 }
 
 type BytesValue struct {
