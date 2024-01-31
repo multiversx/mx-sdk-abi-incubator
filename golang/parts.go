@@ -1,42 +1,36 @@
 package abi
 
 import (
-	"encoding/hex"
 	"errors"
 	"fmt"
-	"strings"
 )
 
+// partsHolder holds data parts (e.g. raw contract call arguments, raw contract return values).
+// It allows one to easily construct parts (thus functioning as a builder of parts).
+// It also allows one to focus on a specific part to read from (thus functioning as a reader of parts: think of a pick-up head).
+// Both functionalities (building and reading) are kept within this single abstraction, for convenience.
 type partsHolder struct {
 	parts            [][]byte
 	focusedPartIndex uint32
 }
 
-// A newly-created holder has no parts.
+// newPartsHolder creates a new partsHolder, which has the given parts.
+// Focus is on the first part, if any, or "beyond the last part" otherwise.
+func newPartsHolder(parts [][]byte) *partsHolder {
+	return &partsHolder{
+		parts:            parts,
+		focusedPartIndex: 0,
+	}
+}
+
+// newEmptyPartsHolder creates a new partsHolder, which has no parts.
 // Parts are created by calling appendEmptyPart().
+// Focus is "beyond the last part" (since there is no part).
 func newEmptyPartsHolder() *partsHolder {
 	return &partsHolder{
 		parts:            [][]byte{},
 		focusedPartIndex: 0,
 	}
-}
-
-func newPartsHolderFromHex(encoded string) (*partsHolder, error) {
-	partsHex := strings.Split(encoded, partsSeparator)
-	parts := make([][]byte, len(partsHex))
-
-	for i, partHex := range partsHex {
-		part, err := hex.DecodeString(partHex)
-		if err != nil {
-			return nil, err
-		}
-
-		parts[i] = part
-	}
-
-	return &partsHolder{
-		parts: parts,
-	}, nil
 }
 
 func (holder *partsHolder) getParts() [][]byte {
@@ -72,17 +66,8 @@ func (holder *partsHolder) appendEmptyPart() {
 	holder.parts = append(holder.parts, []byte{})
 }
 
-func (holder *partsHolder) encodeToHex() string {
-	partsHex := make([]string, len(holder.parts))
-
-	for i, part := range holder.parts {
-		partsHex[i] = hex.EncodeToString(part)
-	}
-
-	return strings.Join(partsHex, partsSeparator)
-}
-
-func (holder *partsHolder) readWholePart() ([]byte, error) {
+// readWholeFocusedPart reads the whole focused part (if any).
+func (holder *partsHolder) readWholeFocusedPart() ([]byte, error) {
 	if holder.isFocusedBeyondLastPart() {
 		return nil, fmt.Errorf("cannot wholly read part %d: unexpected end of data", holder.focusedPartIndex)
 	}

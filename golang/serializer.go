@@ -1,8 +1,9 @@
 package abi
 
 import (
+	"encoding/hex"
 	"errors"
-	"io"
+	"strings"
 )
 
 type serializer struct {
@@ -16,14 +17,23 @@ func NewSerializer(codec codec) *serializer {
 }
 
 func (s *serializer) Serialize(inputValues []interface{}) (string, error) {
-	partsHolder := newEmptyPartsHolder()
-
-	err := s.doSerialize(partsHolder, inputValues)
+	parts, err := s.SerializeToParts(inputValues)
 	if err != nil {
 		return "", err
 	}
 
-	return partsHolder.encodeToHex(), nil
+	return s.encodeParts(parts), nil
+}
+
+func (s *serializer) SerializeToParts(inputValues []interface{}) ([][]byte, error) {
+	partsHolder := newEmptyPartsHolder()
+
+	err := s.doSerialize(partsHolder, inputValues)
+	if err != nil {
+		return nil, err
+	}
+
+	return partsHolder.getParts(), nil
 }
 
 func (s *serializer) doSerialize(partsHolder *partsHolder, inputValues []interface{}) error {
@@ -57,12 +67,18 @@ func (s *serializer) doSerialize(partsHolder *partsHolder, inputValues []interfa
 }
 
 func (s *serializer) Deserialize(data string, outputValues []interface{}) error {
-	partsHolder, err := newPartsHolderFromHex(data)
+	parts, err := s.decodeIntoParts(data)
 	if err != nil {
 		return err
 	}
 
-	err = s.doDeserialize(partsHolder, outputValues)
+	return s.DeserializeParts(parts, outputValues)
+}
+
+func (s *serializer) DeserializeParts(parts [][]byte, outputValues []interface{}) error {
+	partsHolder := newPartsHolder(parts)
+
+	err := s.doDeserialize(partsHolder, outputValues)
 	if err != nil {
 		return err
 	}
@@ -161,7 +177,7 @@ func (s *serializer) deserializeOutputVariadicValues(partsHolder *partsHolder, v
 }
 
 func (s *serializer) deserializeDirectlyEncodableValue(partsHolder *partsHolder, value interface{}) error {
-	part, err := partsHolder.readWholePart()
+	part, err := partsHolder.readWholeFocusedPart()
 	if err != nil {
 		return err
 	}
@@ -177,4 +193,30 @@ func (s *serializer) deserializeDirectlyEncodableValue(partsHolder *partsHolder,
 	}
 
 	return nil
+}
+
+func (s *serializer) encodeParts(parts [][]byte) string {
+	partsHex := make([]string, len(parts))
+
+	for i, part := range parts {
+		partsHex[i] = hex.EncodeToString(part)
+	}
+
+	return strings.Join(partsHex, partsSeparator)
+}
+
+func (s *serializer) decodeIntoParts(encoded string) ([][]byte, error) {
+	partsHex := strings.Split(encoded, partsSeparator)
+	parts := make([][]byte, len(partsHex))
+
+	for i, partHex := range partsHex {
+		part, err := hex.DecodeString(partHex)
+		if err != nil {
+			return nil, err
+		}
+
+		parts[i] = part
+	}
+
+	return parts, nil
 }
