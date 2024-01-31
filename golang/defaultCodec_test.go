@@ -8,7 +8,7 @@ import (
 )
 
 func TestCodec_EncodeNested(t *testing.T) {
-	doTest := func(t *testing.T, value interface{}, expected string) {
+	doTest := func(t *testing.T, value any, expected string) {
 		codec := NewDefaultCodec()
 		encoded, err := codec.EncodeNested(value)
 		require.NoError(t, err)
@@ -100,7 +100,7 @@ func TestCodec_EncodeNested(t *testing.T) {
 }
 
 func TestCodec_EncodeTopLevel(t *testing.T) {
-	doTest := func(t *testing.T, value interface{}, expected string) {
+	doTest := func(t *testing.T, value any, expected string) {
 		codec := NewDefaultCodec()
 		encoded, err := codec.EncodeTopLevel(value)
 		require.NoError(t, err)

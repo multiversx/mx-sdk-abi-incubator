@@ -21,7 +21,7 @@ func NewDefaultCodec() *defaultCodec {
 	return &defaultCodec{}
 }
 
-func (c *defaultCodec) EncodeNested(value interface{}) ([]byte, error) {
+func (c *defaultCodec) EncodeNested(value any) ([]byte, error) {
 	buffer := bytes.NewBuffer(nil)
 	err := c.doEncodeNested(buffer, value)
 	if err != nil {
@@ -31,7 +31,7 @@ func (c *defaultCodec) EncodeNested(value interface{}) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-func (c *defaultCodec) doEncodeNested(writer io.Writer, value interface{}) error {
+func (c *defaultCodec) doEncodeNested(writer io.Writer, value any) error {
 	switch value.(type) {
 	case U8Value:
 		return c.encodeNestedNumber(writer, value.(U8Value).Value, 1)
@@ -60,7 +60,7 @@ func (c *defaultCodec) doEncodeNested(writer io.Writer, value interface{}) error
 	}
 }
 
-func (c *defaultCodec) EncodeTopLevel(value interface{}) ([]byte, error) {
+func (c *defaultCodec) EncodeTopLevel(value any) ([]byte, error) {
 	buffer := bytes.NewBuffer(nil)
 	err := c.doEncodeTopLevel(buffer, value)
 	if err != nil {
@@ -70,7 +70,7 @@ func (c *defaultCodec) EncodeTopLevel(value interface{}) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-func (c *defaultCodec) doEncodeTopLevel(writer io.Writer, value interface{}) error {
+func (c *defaultCodec) doEncodeTopLevel(writer io.Writer, value any) error {
 	switch value.(type) {
 	case U8Value:
 		return c.encodeTopLevelUnsignedNumber(writer, uint64(value.(U8Value).Value))
@@ -99,7 +99,7 @@ func (c *defaultCodec) doEncodeTopLevel(writer io.Writer, value interface{}) err
 	}
 }
 
-func (c *defaultCodec) DecodeNested(data []byte, value interface{}) error {
+func (c *defaultCodec) DecodeNested(data []byte, value any) error {
 	reader := bytes.NewReader(data)
 	err := c.doDecodeNested(reader, value)
 	if err != nil {
@@ -109,7 +109,7 @@ func (c *defaultCodec) DecodeNested(data []byte, value interface{}) error {
 	return nil
 }
 
-func (c *defaultCodec) doDecodeNested(reader io.Reader, value interface{}) error {
+func (c *defaultCodec) doDecodeNested(reader io.Reader, value any) error {
 	switch value.(type) {
 	case *U8Value:
 		return c.decodeNestedNumber(reader, &value.(*U8Value).Value, 1)
@@ -144,7 +144,7 @@ func (c *defaultCodec) doDecodeNested(reader io.Reader, value interface{}) error
 	}
 }
 
-func (c *defaultCodec) DecodeTopLevel(data []byte, value interface{}) error {
+func (c *defaultCodec) DecodeTopLevel(data []byte, value any) error {
 	err := c.doDecodeTopLevel(data, value)
 	if err != nil {
 		return fmt.Errorf("cannot decode (top-level) %T, because of: %w", value, err)
@@ -153,7 +153,7 @@ func (c *defaultCodec) DecodeTopLevel(data []byte, value interface{}) error {
 	return nil
 }
 
-func (c *defaultCodec) doDecodeTopLevel(data []byte, value interface{}) error {
+func (c *defaultCodec) doDecodeTopLevel(data []byte, value any) error {
 	switch value.(type) {
 	case *U8Value:
 		n, err := c.decodeTopLevelUnsignedNumber(data, math.MaxUint8)

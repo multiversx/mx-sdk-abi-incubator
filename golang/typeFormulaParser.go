@@ -28,7 +28,7 @@ func (p *TypeFormulaParser) ParseExpression(expression string) (*TypeFormula, er
 	tokens := p.tokenizeExpression(expression)
 	tokens = filter(tokens, func(token string) bool { return token != p.COMMA })
 
-	stack := make([]interface{}, 0)
+	stack := make([]any, 0)
 
 	for _, token := range tokens {
 		if contains(p.PUNCTUATION, token) {

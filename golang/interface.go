@@ -1,8 +1,8 @@
 package abi
 
 type codec interface {
-	EncodeNested(value interface{}) ([]byte, error)
-	EncodeTopLevel(value interface{}) ([]byte, error)
-	DecodeNested(data []byte, value interface{}) error
-	DecodeTopLevel(data []byte, value interface{}) error
+	EncodeNested(value any) ([]byte, error)
+	EncodeTopLevel(value any) ([]byte, error)
+	DecodeNested(data []byte, value any) error
+	DecodeTopLevel(data []byte, value any) error
 }

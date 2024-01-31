@@ -16,7 +16,7 @@ func NewSerializer(codec codec) *serializer {
 	}
 }
 
-func (s *serializer) Serialize(inputValues []interface{}) (string, error) {
+func (s *serializer) Serialize(inputValues []any) (string, error) {
 	parts, err := s.SerializeToParts(inputValues)
 	if err != nil {
 		return "", err
@@ -25,7 +25,7 @@ func (s *serializer) Serialize(inputValues []interface{}) (string, error) {
 	return s.encodeParts(parts), nil
 }
 
-func (s *serializer) SerializeToParts(inputValues []interface{}) ([][]byte, error) {
+func (s *serializer) SerializeToParts(inputValues []any) ([][]byte, error) {
 	partsHolder := newEmptyPartsHolder()
 
 	err := s.doSerialize(partsHolder, inputValues)
@@ -36,7 +36,7 @@ func (s *serializer) SerializeToParts(inputValues []interface{}) ([][]byte, erro
 	return partsHolder.getParts(), nil
 }
 
-func (s *serializer) doSerialize(partsHolder *partsHolder, inputValues []interface{}) error {
+func (s *serializer) doSerialize(partsHolder *partsHolder, inputValues []any) error {
 	var err error
 
 	for i, value := range inputValues {
@@ -66,7 +66,7 @@ func (s *serializer) doSerialize(partsHolder *partsHolder, inputValues []interfa
 	return nil
 }
 
-func (s *serializer) Deserialize(data string, outputValues []interface{}) error {
+func (s *serializer) Deserialize(data string, outputValues []any) error {
 	parts, err := s.decodeIntoParts(data)
 	if err != nil {
 		return err
@@ -75,7 +75,7 @@ func (s *serializer) Deserialize(data string, outputValues []interface{}) error 
 	return s.DeserializeParts(parts, outputValues)
 }
 
-func (s *serializer) DeserializeParts(parts [][]byte, outputValues []interface{}) error {
+func (s *serializer) DeserializeParts(parts [][]byte, outputValues []any) error {
 	partsHolder := newPartsHolder(parts)
 
 	err := s.doDeserialize(partsHolder, outputValues)
@@ -86,7 +86,7 @@ func (s *serializer) DeserializeParts(parts [][]byte, outputValues []interface{}
 	return nil
 }
 
-func (s *serializer) doDeserialize(partsHolder *partsHolder, outputValues []interface{}) error {
+func (s *serializer) doDeserialize(partsHolder *partsHolder, outputValues []any) error {
 	var err error
 
 	for i, value := range outputValues {
@@ -117,7 +117,7 @@ func (s *serializer) doDeserialize(partsHolder *partsHolder, outputValues []inte
 
 func (s *serializer) serializeInputMultiValue(partsHolder *partsHolder, value InputMultiValue) error {
 	for _, item := range value.Items {
-		err := s.doSerialize(partsHolder, []interface{}{item})
+		err := s.doSerialize(partsHolder, []any{item})
 		if err != nil {
 			return err
 		}
@@ -128,7 +128,7 @@ func (s *serializer) serializeInputMultiValue(partsHolder *partsHolder, value In
 
 func (s *serializer) serializeInputVariadicValues(partsHolder *partsHolder, value InputVariadicValues) error {
 	for _, item := range value.Items {
-		err := s.doSerialize(partsHolder, []interface{}{item})
+		err := s.doSerialize(partsHolder, []any{item})
 		if err != nil {
 			return err
 		}
@@ -137,7 +137,7 @@ func (s *serializer) serializeInputVariadicValues(partsHolder *partsHolder, valu
 	return nil
 }
 
-func (s *serializer) serializeDirectlyEncodableValue(partsHolder *partsHolder, value interface{}) error {
+func (s *serializer) serializeDirectlyEncodableValue(partsHolder *partsHolder, value any) error {
 	data, err := s.codec.EncodeTopLevel(value)
 	if err != nil {
 		return err
@@ -148,7 +148,7 @@ func (s *serializer) serializeDirectlyEncodableValue(partsHolder *partsHolder, v
 
 func (s *serializer) deserializeOutputMultiValue(partsHolder *partsHolder, value *OutputMultiValue) error {
 	for _, item := range value.Items {
-		err := s.doDeserialize(partsHolder, []interface{}{item})
+		err := s.doDeserialize(partsHolder, []any{item})
 		if err != nil {
 			return err
 		}
@@ -165,7 +165,7 @@ func (s *serializer) deserializeOutputVariadicValues(partsHolder *partsHolder, v
 	for !partsHolder.isFocusedBeyondLastPart() {
 		newItem := value.ItemCreator()
 
-		err := s.doDeserialize(partsHolder, []interface{}{newItem})
+		err := s.doDeserialize(partsHolder, []any{newItem})
 		if err != nil {
 			return err
 		}
@@ -176,7 +176,7 @@ func (s *serializer) deserializeOutputVariadicValues(partsHolder *partsHolder, v
 	return nil
 }
 
-func (s *serializer) deserializeDirectlyEncodableValue(partsHolder *partsHolder, value interface{}) error {
+func (s *serializer) deserializeDirectlyEncodableValue(partsHolder *partsHolder, value any) error {
 	part, err := partsHolder.readWholeFocusedPart()
 	if err != nil {
 		return err

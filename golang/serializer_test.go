@@ -10,7 +10,7 @@ func TestSerializer_Serialize(t *testing.T) {
 	serializer := NewSerializer(NewDefaultCodec())
 
 	t.Run("u8", func(t *testing.T) {
-		data, err := serializer.Serialize([]interface{}{
+		data, err := serializer.Serialize([]any{
 			U8Value{Value: 0x42},
 		})
 
@@ -19,7 +19,7 @@ func TestSerializer_Serialize(t *testing.T) {
 	})
 
 	t.Run("u16", func(t *testing.T) {
-		data, err := serializer.Serialize([]interface{}{
+		data, err := serializer.Serialize([]any{
 			U16Value{Value: 0x4243},
 		})
 
@@ -28,7 +28,7 @@ func TestSerializer_Serialize(t *testing.T) {
 	})
 
 	t.Run("u8, u16", func(t *testing.T) {
-		data, err := serializer.Serialize([]interface{}{
+		data, err := serializer.Serialize([]any{
 			U8Value{Value: 0x42},
 			U16Value{Value: 0x4243},
 		})
@@ -38,9 +38,9 @@ func TestSerializer_Serialize(t *testing.T) {
 	})
 
 	t.Run("multi<u8, u16, u32>", func(t *testing.T) {
-		data, err := serializer.Serialize([]interface{}{
+		data, err := serializer.Serialize([]any{
 			InputMultiValue{
-				Items: []interface{}{
+				Items: []any{
 					U8Value{Value: 0x42},
 					U16Value{Value: 0x4243},
 					U32Value{Value: 0x42434445},
@@ -53,10 +53,10 @@ func TestSerializer_Serialize(t *testing.T) {
 	})
 
 	t.Run("u8, multi<u8, u16, u32>", func(t *testing.T) {
-		data, err := serializer.Serialize([]interface{}{
+		data, err := serializer.Serialize([]any{
 			U8Value{Value: 0x42},
 			InputMultiValue{
-				Items: []interface{}{
+				Items: []any{
 					U8Value{Value: 0x42},
 					U16Value{Value: 0x4243},
 					U32Value{Value: 0x42434445},
@@ -69,17 +69,17 @@ func TestSerializer_Serialize(t *testing.T) {
 	})
 
 	t.Run("multi<multi<u8, u16>, multi<u8, u16>>", func(t *testing.T) {
-		data, err := serializer.Serialize([]interface{}{
+		data, err := serializer.Serialize([]any{
 			InputMultiValue{
-				Items: []interface{}{
+				Items: []any{
 					InputMultiValue{
-						Items: []interface{}{
+						Items: []any{
 							U8Value{Value: 0x42},
 							U16Value{Value: 0x4243},
 						},
 					},
 					InputMultiValue{
-						Items: []interface{}{
+						Items: []any{
 							U8Value{Value: 0x44},
 							U16Value{Value: 0x4445},
 						},
@@ -93,9 +93,9 @@ func TestSerializer_Serialize(t *testing.T) {
 	})
 
 	t.Run("variadic, of different types", func(t *testing.T) {
-		data, err := serializer.Serialize([]interface{}{
+		data, err := serializer.Serialize([]any{
 			InputVariadicValues{
-				Items: []interface{}{
+				Items: []any{
 					U8Value{Value: 0x42},
 					U16Value{Value: 0x4243},
 				},
@@ -110,9 +110,9 @@ func TestSerializer_Serialize(t *testing.T) {
 	})
 
 	t.Run("variadic<u8>, u8: should err because variadic must be last", func(t *testing.T) {
-		_, err := serializer.Serialize([]interface{}{
+		_, err := serializer.Serialize([]any{
 			InputVariadicValues{
-				Items: []interface{}{
+				Items: []any{
 					U8Value{Value: 0x42},
 					U8Value{Value: 0x43},
 				},
@@ -124,10 +124,10 @@ func TestSerializer_Serialize(t *testing.T) {
 	})
 
 	t.Run("u8, variadic<u8>", func(t *testing.T) {
-		data, err := serializer.Serialize([]interface{}{
+		data, err := serializer.Serialize([]any{
 			U8Value{Value: 0x41},
 			InputVariadicValues{
-				Items: []interface{}{
+				Items: []any{
 					U8Value{Value: 0x42},
 					U8Value{Value: 0x43},
 				},
@@ -143,38 +143,38 @@ func TestSerializer_Deserialize(t *testing.T) {
 	serializer := NewSerializer(NewDefaultCodec())
 
 	t.Run("nil destination", func(t *testing.T) {
-		err := serializer.Deserialize("", []interface{}{nil})
+		err := serializer.Deserialize("", []any{nil})
 		require.ErrorContains(t, err, "cannot deserialize into nil value")
 	})
 
 	t.Run("u8", func(t *testing.T) {
-		outputValues := []interface{}{
+		outputValues := []any{
 			&U8Value{},
 		}
 
 		err := serializer.Deserialize("42", outputValues)
 
 		require.Nil(t, err)
-		require.Equal(t, []interface{}{
+		require.Equal(t, []any{
 			&U8Value{Value: 0x42},
 		}, outputValues)
 	})
 
 	t.Run("u16", func(t *testing.T) {
-		outputValues := []interface{}{
+		outputValues := []any{
 			&U16Value{},
 		}
 
 		err := serializer.Deserialize("4243", outputValues)
 
 		require.Nil(t, err)
-		require.Equal(t, []interface{}{
+		require.Equal(t, []any{
 			&U16Value{Value: 0x4243},
 		}, outputValues)
 	})
 
 	t.Run("u8, u16", func(t *testing.T) {
-		outputValues := []interface{}{
+		outputValues := []any{
 			&U8Value{},
 			&U16Value{},
 		}
@@ -182,16 +182,16 @@ func TestSerializer_Deserialize(t *testing.T) {
 		err := serializer.Deserialize("42@4243", outputValues)
 
 		require.Nil(t, err)
-		require.Equal(t, []interface{}{
+		require.Equal(t, []any{
 			&U8Value{Value: 0x42},
 			&U16Value{Value: 0x4243},
 		}, outputValues)
 	})
 
 	t.Run("multi<u8, u16, u32>", func(t *testing.T) {
-		outputValues := []interface{}{
+		outputValues := []any{
 			&OutputMultiValue{
-				Items: []interface{}{
+				Items: []any{
 					&U8Value{},
 					&U16Value{},
 					&U32Value{},
@@ -202,9 +202,9 @@ func TestSerializer_Deserialize(t *testing.T) {
 		err := serializer.Deserialize("42@4243@42434445", outputValues)
 
 		require.Nil(t, err)
-		require.Equal(t, []interface{}{
+		require.Equal(t, []any{
 			&OutputMultiValue{
-				Items: []interface{}{
+				Items: []any{
 					&U8Value{Value: 0x42},
 					&U16Value{Value: 0x4243},
 					&U32Value{Value: 0x42434445},
@@ -214,10 +214,10 @@ func TestSerializer_Deserialize(t *testing.T) {
 	})
 
 	t.Run("u8, multi<u8, u16, u32>", func(t *testing.T) {
-		outputValues := []interface{}{
+		outputValues := []any{
 			&U8Value{},
 			&OutputMultiValue{
-				Items: []interface{}{
+				Items: []any{
 					&U8Value{},
 					&U16Value{},
 					&U32Value{},
@@ -228,10 +228,10 @@ func TestSerializer_Deserialize(t *testing.T) {
 		err := serializer.Deserialize("42@42@4243@42434445", outputValues)
 
 		require.Nil(t, err)
-		require.Equal(t, []interface{}{
+		require.Equal(t, []any{
 			&U8Value{Value: 0x42},
 			&OutputMultiValue{
-				Items: []interface{}{
+				Items: []any{
 					&U8Value{Value: 0x42},
 					&U16Value{Value: 0x4243},
 					&U32Value{Value: 0x42434445},
@@ -242,34 +242,34 @@ func TestSerializer_Deserialize(t *testing.T) {
 
 	t.Run("variadic, should err because of nil item creator", func(t *testing.T) {
 		destination := &OutputVariadicValues{
-			Items: []interface{}{},
+			Items: []any{},
 		}
 
-		err := serializer.Deserialize("", []interface{}{destination})
+		err := serializer.Deserialize("", []any{destination})
 		require.ErrorContains(t, err, "cannot deserialize variadic values: item creator is nil")
 	})
 
 	t.Run("empty: u8", func(t *testing.T) {
 		destination := &OutputVariadicValues{
-			Items:       []interface{}{},
-			ItemCreator: func() interface{} { return &U8Value{} },
+			Items:       []any{},
+			ItemCreator: func() any { return &U8Value{} },
 		}
 
-		err := serializer.Deserialize("", []interface{}{destination})
+		err := serializer.Deserialize("", []any{destination})
 		require.NoError(t, err)
-		require.Equal(t, []interface{}{&U8Value{Value: 0}}, destination.Items)
+		require.Equal(t, []any{&U8Value{Value: 0}}, destination.Items)
 	})
 
 	t.Run("variadic<u8>", func(t *testing.T) {
 		destination := &OutputVariadicValues{
-			Items:       []interface{}{},
-			ItemCreator: func() interface{} { return &U8Value{} },
+			Items:       []any{},
+			ItemCreator: func() any { return &U8Value{} },
 		}
 
-		err := serializer.Deserialize("2A@2B@2C", []interface{}{destination})
+		err := serializer.Deserialize("2A@2B@2C", []any{destination})
 		require.NoError(t, err)
 
-		require.Equal(t, []interface{}{
+		require.Equal(t, []any{
 			&U8Value{Value: 42},
 			&U8Value{Value: 43},
 			&U8Value{Value: 44},
@@ -278,14 +278,14 @@ func TestSerializer_Deserialize(t *testing.T) {
 
 	t.Run("varidic<u8>, with empty items", func(t *testing.T) {
 		destination := &OutputVariadicValues{
-			Items:       []interface{}{},
-			ItemCreator: func() interface{} { return &U8Value{} },
+			Items:       []any{},
+			ItemCreator: func() any { return &U8Value{} },
 		}
 
-		err := serializer.Deserialize("@01@", []interface{}{destination})
+		err := serializer.Deserialize("@01@", []any{destination})
 		require.NoError(t, err)
 
-		require.Equal(t, []interface{}{
+		require.Equal(t, []any{
 			&U8Value{Value: 0},
 			&U8Value{Value: 1},
 			&U8Value{Value: 0},
@@ -294,14 +294,14 @@ func TestSerializer_Deserialize(t *testing.T) {
 
 	t.Run("varidic<u32>", func(t *testing.T) {
 		destination := &OutputVariadicValues{
-			Items:       []interface{}{},
-			ItemCreator: func() interface{} { return &U32Value{} },
+			Items:       []any{},
+			ItemCreator: func() any { return &U32Value{} },
 		}
 
-		err := serializer.Deserialize("AABBCCDD@DDCCBBAA", []interface{}{destination})
+		err := serializer.Deserialize("AABBCCDD@DDCCBBAA", []any{destination})
 		require.NoError(t, err)
 
-		require.Equal(t, []interface{}{
+		require.Equal(t, []any{
 			&U32Value{Value: 0xAABBCCDD},
 			&U32Value{Value: 0xDDCCBBAA},
 		}, destination.Items)
@@ -309,11 +309,11 @@ func TestSerializer_Deserialize(t *testing.T) {
 
 	t.Run("varidic<u8>, should err because decoded value is too large", func(t *testing.T) {
 		destination := &OutputVariadicValues{
-			Items:       []interface{}{},
-			ItemCreator: func() interface{} { return &U8Value{} },
+			Items:       []any{},
+			ItemCreator: func() any { return &U8Value{} },
 		}
 
-		err := serializer.Deserialize("0100", []interface{}{destination})
+		err := serializer.Deserialize("0100", []any{destination})
 		require.ErrorContains(t, err, "cannot decode (top-level) *abi.U8Value, because of: decoded value is too large: 256 > 255")
 	})
 }

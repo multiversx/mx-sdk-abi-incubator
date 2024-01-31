@@ -51,12 +51,12 @@ type BoolValue struct {
 }
 
 type OptionValue struct {
-	Value interface{}
+	Value any
 }
 
 type Field struct {
 	Name  string
-	Value interface{}
+	Value any
 }
 
 type StructValue struct {
@@ -73,32 +73,32 @@ type EnumValue struct {
 }
 
 type InputListValue struct {
-	Items []interface{}
+	Items []any
 }
 
 type OutputListValue struct {
-	Items       []interface{}
-	ItemCreator func() interface{}
+	Items       []any
+	ItemCreator func() any
 }
 
 type InputMultiValue struct {
-	Items []interface{}
+	Items []any
 }
 
 type InputVariadicValues struct {
-	Items []interface{}
+	Items []any
 }
 
 type OutputMultiValue struct {
-	Items []interface{}
+	Items []any
 }
 
 type OutputVariadicValues struct {
-	Items       []interface{}
-	ItemCreator func() interface{}
+	Items       []any
+	ItemCreator func() any
 }
 
 type OptionalValue struct {
-	Value interface{}
+	Value any
 	IsSet bool
 }
