@@ -130,11 +130,11 @@ func (c *defaultCodec) decodeNestedBigNumber(reader io.Reader) (*big.Int, error)
 		return nil, err
 	}
 
-	return big.NewInt(0).SetBytes(data), nil
+	return twos.FromBytes(data), nil
 }
 
-func (c *defaultCodec) decodeTopLevelBigNumber(data []byte) (*big.Int, error) {
-	return big.NewInt(0).SetBytes(data), nil
+func (c *defaultCodec) decodeTopLevelBigNumber(data []byte) *big.Int {
+	return twos.FromBytes(data)
 }
 
 func (c *defaultCodec) encodeLength(writer io.Writer, length uint32) error {

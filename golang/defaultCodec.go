@@ -213,11 +213,7 @@ func (c *defaultCodec) doDecodeTopLevel(data []byte, value any) error {
 
 		value.(*I64Value).Value = int64(n)
 	case *BigIntValue:
-		n, err := c.decodeTopLevelBigNumber(data)
-		if err != nil {
-			return err
-		}
-
+		n := c.decodeTopLevelBigNumber(data)
 		value.(*BigIntValue).Value = n
 	case *StructValue:
 		return c.decodeTopLevelStruct(data, value.(*StructValue))

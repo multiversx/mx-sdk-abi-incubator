@@ -58,7 +58,7 @@ func TestCodec_EncodeNested(t *testing.T) {
 		doTest(t, U64Value{Value: 0xffffffffffffffff}, "ffffffffffffffff")
 	})
 
-	t.Run("big int", func(t *testing.T) {
+	t.Run("bigInt", func(t *testing.T) {
 		doTest(t, BigIntValue{Value: big.NewInt(0)}, "00000000")
 		doTest(t, BigIntValue{Value: big.NewInt(1)}, "0000000101")
 		doTest(t, BigIntValue{Value: big.NewInt(-1)}, "00000001ff")
@@ -135,6 +135,12 @@ func TestCodec_EncodeTopLevel(t *testing.T) {
 
 	t.Run("u64", func(t *testing.T) {
 		doTest(t, U64Value{Value: 0x0042434445464748}, "42434445464748")
+	})
+
+	t.Run("bigInt", func(t *testing.T) {
+		doTest(t, BigIntValue{Value: big.NewInt(0)}, "")
+		doTest(t, BigIntValue{Value: big.NewInt(1)}, "01")
+		doTest(t, BigIntValue{Value: big.NewInt(-1)}, "ff")
 	})
 
 	t.Run("struct", func(t *testing.T) {
@@ -246,6 +252,26 @@ func TestCodec_DecodeNested(t *testing.T) {
 
 		err := codec.DecodeNested(data, destination)
 		require.ErrorContains(t, err, "cannot read exactly 8 bytes")
+	})
+
+	t.Run("bigInt", func(t *testing.T) {
+		data, _ := hex.DecodeString("00000000")
+		destination := &BigIntValue{}
+		err := codec.DecodeNested(data, destination)
+		require.NoError(t, err)
+		require.Equal(t, &BigIntValue{Value: big.NewInt(0)}, destination)
+
+		data, _ = hex.DecodeString("0000000101")
+		destination = &BigIntValue{}
+		err = codec.DecodeNested(data, destination)
+		require.NoError(t, err)
+		require.Equal(t, &BigIntValue{Value: big.NewInt(1)}, destination)
+
+		data, _ = hex.DecodeString("00000001ff")
+		destination = &BigIntValue{}
+		err = codec.DecodeNested(data, destination)
+		require.NoError(t, err)
+		require.Equal(t, &BigIntValue{Value: big.NewInt(-1)}, destination)
 	})
 
 	t.Run("struct", func(t *testing.T) {
@@ -397,6 +423,26 @@ func TestCodec_DecodeTopLevel(t *testing.T) {
 
 		err := codec.DecodeTopLevel(data, destination)
 		require.ErrorContains(t, err, "decoded value is too large")
+	})
+
+	t.Run("bigInt", func(t *testing.T) {
+		data, _ := hex.DecodeString("")
+		destination := &BigIntValue{}
+		err := codec.DecodeTopLevel(data, destination)
+		require.NoError(t, err)
+		require.Equal(t, &BigIntValue{Value: big.NewInt(0)}, destination)
+
+		data, _ = hex.DecodeString("01")
+		destination = &BigIntValue{}
+		err = codec.DecodeTopLevel(data, destination)
+		require.NoError(t, err)
+		require.Equal(t, &BigIntValue{Value: big.NewInt(1)}, destination)
+
+		data, _ = hex.DecodeString("ff")
+		destination = &BigIntValue{}
+		err = codec.DecodeTopLevel(data, destination)
+		require.NoError(t, err)
+		require.Equal(t, &BigIntValue{Value: big.NewInt(-1)}, destination)
 	})
 
 	t.Run("struct", func(t *testing.T) {
