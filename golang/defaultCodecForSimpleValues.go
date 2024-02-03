@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"math/big"
+
+	twos "github.com/multiversx/mx-components-big-int/twos-complement"
 )
 
 func (c *defaultCodec) encodeNestedNumber(writer io.Writer, value any, numBytes int) error {
@@ -87,7 +89,7 @@ func (c *defaultCodec) decodeTopLevelSignedNumber(data []byte, maxValue int64) (
 }
 
 func (c *defaultCodec) encodeNestedBigNumber(writer io.Writer, value *big.Int) error {
-	data := value.Bytes()
+	data := twos.ToBytes(value)
 	dataLength := len(data)
 
 	// Write the length of the payload
@@ -106,7 +108,7 @@ func (c *defaultCodec) encodeNestedBigNumber(writer io.Writer, value *big.Int) e
 }
 
 func (c *defaultCodec) encodeTopLevelBigNumber(writer io.Writer, value *big.Int) error {
-	data := value.Bytes()
+	data := twos.ToBytes(value)
 	_, err := writer.Write(data)
 	if err != nil {
 		return err

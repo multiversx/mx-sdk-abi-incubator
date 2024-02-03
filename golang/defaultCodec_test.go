@@ -2,6 +2,7 @@ package abi
 
 import (
 	"encoding/hex"
+	"math/big"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -15,11 +16,17 @@ func TestCodec_EncodeNested(t *testing.T) {
 		require.Equal(t, expected, hex.EncodeToString(encoded))
 	}
 
-	t.Run("u8", func(t *testing.T) {
+	t.Run("u8, i8", func(t *testing.T) {
 		doTest(t, U8Value{Value: 0x00}, "00")
 		doTest(t, U8Value{Value: 0x01}, "01")
 		doTest(t, U8Value{Value: 0x42}, "42")
 		doTest(t, U8Value{Value: 0xff}, "ff")
+
+		doTest(t, I8Value{Value: 0x00}, "00")
+		doTest(t, I8Value{Value: 0x01}, "01")
+		doTest(t, I8Value{Value: -1}, "ff")
+		doTest(t, I8Value{Value: -128}, "80")
+		doTest(t, I8Value{Value: 127}, "7f")
 	})
 
 	t.Run("u16", func(t *testing.T) {
@@ -49,6 +56,12 @@ func TestCodec_EncodeNested(t *testing.T) {
 		doTest(t, U64Value{Value: 0x0011223344556677}, "0011223344556677")
 		doTest(t, U64Value{Value: 0x1122334455667788}, "1122334455667788")
 		doTest(t, U64Value{Value: 0xffffffffffffffff}, "ffffffffffffffff")
+	})
+
+	t.Run("big int", func(t *testing.T) {
+		doTest(t, BigIntValue{Value: big.NewInt(0)}, "00000000")
+		doTest(t, BigIntValue{Value: big.NewInt(1)}, "0000000101")
+		doTest(t, BigIntValue{Value: big.NewInt(-1)}, "00000001ff")
 	})
 
 	t.Run("struct", func(t *testing.T) {
