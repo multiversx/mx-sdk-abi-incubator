@@ -1,4 +1,4 @@
-module github.com/multiversx/mx-sdk-abi
+module github.com/multiversx/mx-sdk-abi-incubator/abi
 
 go 1.20
 
