@@ -352,6 +352,52 @@ func TestCodec_DecodeNested(t *testing.T) {
 			},
 		}, destination)
 	})
+
+	t.Run("option with value", func(t *testing.T) {
+		data, _ := hex.DecodeString("010008")
+
+		destination := &OptionValue{
+			Value: &U16Value{},
+		}
+
+		err := codec.DecodeNested(data, destination)
+		require.NoError(t, err)
+		require.Equal(t, &OptionValue{
+			Value: &U16Value{Value: 8},
+		}, destination)
+	})
+
+	t.Run("option without value", func(t *testing.T) {
+		data, _ := hex.DecodeString("00")
+
+		destination := &OptionValue{
+			Value: &U16Value{},
+		}
+
+		err := codec.DecodeNested(data, destination)
+		require.NoError(t, err)
+		require.Equal(t, &OptionValue{
+			Value: nil,
+		}, destination)
+	})
+
+	t.Run("list", func(t *testing.T) {
+		data, _ := hex.DecodeString("00000003000100020003")
+
+		destination := &OutputListValue{
+			ItemCreator: func() any { return &U16Value{} },
+			Items:       []any{},
+		}
+
+		err := codec.DecodeNested(data, destination)
+		require.NoError(t, err)
+		require.Equal(t,
+			[]any{
+				&U16Value{Value: 1},
+				&U16Value{Value: 2},
+				&U16Value{Value: 3},
+			}, destination.Items)
+	})
 }
 
 func TestCodec_DecodeTopLevel(t *testing.T) {

@@ -139,6 +139,10 @@ func (c *defaultCodec) doDecodeNested(reader io.Reader, value any) error {
 		return c.decodeNestedStruct(reader, value.(*StructValue))
 	case *EnumValue:
 		return c.decodeNestedEnum(reader, value.(*EnumValue))
+	case *OptionValue:
+		return c.decodeNestedOption(reader, value.(*OptionValue))
+	case *OutputListValue:
+		return c.decodeNestedList(reader, value.(*OutputListValue))
 	default:
 		return fmt.Errorf("unsupported type for nested decoding: %T", value)
 	}
