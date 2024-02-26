@@ -172,3 +172,18 @@ func (c *defaultCodec) decodeNestedString(reader io.Reader, value *StringValue) 
 	value.Value = string(data)
 	return nil
 }
+
+func (c *defaultCodec) decodeNestedBytes(reader io.Reader, value *BytesValue) error {
+	length, err := c.decodeLength(reader)
+	if err != nil {
+		return err
+	}
+
+	data, err := readBytesExactly(reader, int(length))
+	if err != nil {
+		return err
+	}
+
+	value.Value = data
+	return nil
+}

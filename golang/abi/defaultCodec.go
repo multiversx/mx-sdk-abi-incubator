@@ -137,6 +137,8 @@ func (c *defaultCodec) doDecodeNested(reader io.Reader, value any) error {
 		return nil
 	case *StringValue:
 		return c.decodeNestedString(reader, value.(*StringValue))
+	case *BytesValue:
+		return c.decodeNestedBytes(reader, value.(*BytesValue))
 	case *StructValue:
 		return c.decodeNestedStruct(reader, value.(*StructValue))
 	case *EnumValue:
