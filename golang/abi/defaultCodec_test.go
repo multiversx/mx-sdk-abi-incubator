@@ -274,6 +274,20 @@ func TestCodec_DecodeNested(t *testing.T) {
 		require.Equal(t, &BigIntValue{Value: big.NewInt(-1)}, destination)
 	})
 
+	t.Run("string", func(t *testing.T) {
+		data, _ := hex.DecodeString("00000000")
+		destination := &StringValue{}
+		err := codec.DecodeNested(data, destination)
+		require.NoError(t, err)
+		require.Equal(t, &StringValue{}, destination)
+
+		data, _ = hex.DecodeString("00000003616263")
+		destination = &StringValue{}
+		err = codec.DecodeNested(data, destination)
+		require.NoError(t, err)
+		require.Equal(t, &StringValue{Value: "abc"}, destination)
+	})
+
 	t.Run("struct", func(t *testing.T) {
 		data, _ := hex.DecodeString("014142")
 

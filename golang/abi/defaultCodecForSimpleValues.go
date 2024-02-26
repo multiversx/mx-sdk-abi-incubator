@@ -157,3 +157,18 @@ func (c *defaultCodec) decodeLength(reader io.Reader) (uint32, error) {
 
 	return binary.BigEndian.Uint32(bytes), nil
 }
+
+func (c *defaultCodec) decodeNestedString(reader io.Reader, value *StringValue) error {
+	length, err := c.decodeLength(reader)
+	if err != nil {
+		return err
+	}
+
+	data, err := readBytesExactly(reader, int(length))
+	if err != nil {
+		return err
+	}
+
+	value.Value = string(data)
+	return nil
+}
