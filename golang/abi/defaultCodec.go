@@ -51,10 +51,18 @@ func (c *defaultCodec) doEncodeNested(writer io.Writer, value any) error {
 		return c.encodeNestedNumber(writer, value.(I64Value).Value, 8)
 	case BigIntValue:
 		return c.encodeNestedBigNumber(writer, value.(BigIntValue).Value)
+	case StringValue:
+		return c.encodeNestedString(writer, value.(StringValue))
+	case BytesValue:
+		return c.encodeNestedBytes(writer, value.(BytesValue))
 	case StructValue:
 		return c.encodeNestedStruct(writer, value.(StructValue))
 	case EnumValue:
 		return c.encodeNestedEnum(writer, value.(EnumValue))
+	case OptionValue:
+		return c.encodeNestedOption(writer, value.(OptionValue))
+	case InputListValue:
+		return c.encodeNestedList(writer, value.(InputListValue))
 	default:
 		return fmt.Errorf("unsupported type for nested encoding: %T", value)
 	}

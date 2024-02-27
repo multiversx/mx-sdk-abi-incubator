@@ -158,6 +158,17 @@ func (c *defaultCodec) decodeLength(reader io.Reader) (uint32, error) {
 	return binary.BigEndian.Uint32(bytes), nil
 }
 
+func (c *defaultCodec) encodeNestedString(writer io.Writer, value StringValue) error {
+	data := []byte(value.Value)
+	err := c.encodeLength(writer, uint32(len(data)))
+	if err != nil {
+		return err
+	}
+
+	_, err = writer.Write(data)
+	return err
+}
+
 func (c *defaultCodec) decodeNestedString(reader io.Reader, value *StringValue) error {
 	length, err := c.decodeLength(reader)
 	if err != nil {
@@ -171,6 +182,16 @@ func (c *defaultCodec) decodeNestedString(reader io.Reader, value *StringValue) 
 
 	value.Value = string(data)
 	return nil
+}
+
+func (c *defaultCodec) encodeNestedBytes(writer io.Writer, value BytesValue) error {
+	err := c.encodeLength(writer, uint32(len(value.Value)))
+	if err != nil {
+		return err
+	}
+
+	_, err = writer.Write(value.Value)
+	return err
 }
 
 func (c *defaultCodec) decodeNestedBytes(reader io.Reader, value *BytesValue) error {

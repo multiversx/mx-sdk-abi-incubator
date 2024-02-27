@@ -64,6 +64,16 @@ func TestCodec_EncodeNested(t *testing.T) {
 		doTest(t, BigIntValue{Value: big.NewInt(-1)}, "00000001ff")
 	})
 
+	t.Run("string", func(t *testing.T) {
+		doTest(t, StringValue{Value: ""}, "00000000")
+		doTest(t, StringValue{Value: "abc"}, "00000003616263")
+	})
+
+	t.Run("bytes", func(t *testing.T) {
+		doTest(t, BytesValue{Value: []byte{}}, "00000000")
+		doTest(t, BytesValue{Value: []byte{'a', 'b', 'c'}}, "00000003616263")
+	})
+
 	t.Run("struct", func(t *testing.T) {
 		fooStruct := StructValue{
 			Fields: []Field{
@@ -109,6 +119,34 @@ func TestCodec_EncodeNested(t *testing.T) {
 		}
 
 		doTest(t, fooEnum, "2a014142")
+	})
+
+	t.Run("option with value", func(t *testing.T) {
+		fooOption := OptionValue{
+			Value: U16Value{Value: 0x08},
+		}
+
+		doTest(t, fooOption, "010008")
+	})
+
+	t.Run("option without value", func(t *testing.T) {
+		fooOption := OptionValue{
+			Value: nil,
+		}
+
+		doTest(t, fooOption, "00")
+	})
+
+	t.Run("list", func(t *testing.T) {
+		fooList := InputListValue{
+			Items: []any{
+				U16Value{Value: 1},
+				U16Value{Value: 2},
+				U16Value{Value: 3},
+			},
+		}
+
+		doTest(t, fooList, "00000003000100020003")
 	})
 }
 
