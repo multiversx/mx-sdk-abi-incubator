@@ -38,6 +38,10 @@ type BigIntValue struct {
 	Value *big.Int
 }
 
+type AddressValue struct {
+	Value []byte
+}
+
 type BytesValue struct {
 	Value []byte
 }

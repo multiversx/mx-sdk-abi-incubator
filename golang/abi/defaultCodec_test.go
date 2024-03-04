@@ -9,8 +9,9 @@ import (
 )
 
 func TestCodec_EncodeNested(t *testing.T) {
+	codec := NewDefaultCodec()
+
 	doTest := func(t *testing.T, value any, expected string) {
-		codec := NewDefaultCodec()
 		encoded, err := codec.EncodeNested(value)
 		require.NoError(t, err)
 		require.Equal(t, expected, hex.EncodeToString(encoded))
@@ -62,6 +63,17 @@ func TestCodec_EncodeNested(t *testing.T) {
 		doTest(t, BigIntValue{Value: big.NewInt(0)}, "00000000")
 		doTest(t, BigIntValue{Value: big.NewInt(1)}, "0000000101")
 		doTest(t, BigIntValue{Value: big.NewInt(-1)}, "00000001ff")
+	})
+
+	t.Run("address", func(t *testing.T) {
+		data, _ := hex.DecodeString("0139472eff6886771a982f3083da5d421f24c29181e63888228dc81ca60d69e1")
+		doTest(t, AddressValue{Value: data}, "0139472eff6886771a982f3083da5d421f24c29181e63888228dc81ca60d69e1")
+	})
+
+	t.Run("address (bad)", func(t *testing.T) {
+		data, _ := hex.DecodeString("0139472eff6886771a982f3083da5d42")
+		_, err := codec.EncodeNested(AddressValue{Value: data})
+		require.ErrorContains(t, err, "public key (address) has invalid length")
 	})
 
 	t.Run("string", func(t *testing.T) {
@@ -151,8 +163,9 @@ func TestCodec_EncodeNested(t *testing.T) {
 }
 
 func TestCodec_EncodeTopLevel(t *testing.T) {
+	codec := NewDefaultCodec()
+
 	doTest := func(t *testing.T, value any, expected string) {
-		codec := NewDefaultCodec()
 		encoded, err := codec.EncodeTopLevel(value)
 		require.NoError(t, err)
 		require.Equal(t, expected, hex.EncodeToString(encoded))
@@ -179,6 +192,17 @@ func TestCodec_EncodeTopLevel(t *testing.T) {
 		doTest(t, BigIntValue{Value: big.NewInt(0)}, "")
 		doTest(t, BigIntValue{Value: big.NewInt(1)}, "01")
 		doTest(t, BigIntValue{Value: big.NewInt(-1)}, "ff")
+	})
+
+	t.Run("address", func(t *testing.T) {
+		data, _ := hex.DecodeString("0139472eff6886771a982f3083da5d421f24c29181e63888228dc81ca60d69e1")
+		doTest(t, AddressValue{Value: data}, "0139472eff6886771a982f3083da5d421f24c29181e63888228dc81ca60d69e1")
+	})
+
+	t.Run("address (bad)", func(t *testing.T) {
+		data, _ := hex.DecodeString("0139472eff6886771a982f3083da5d42")
+		_, err := codec.EncodeTopLevel(AddressValue{Value: data})
+		require.ErrorContains(t, err, "public key (address) has invalid length")
 	})
 
 	t.Run("struct", func(t *testing.T) {
@@ -310,6 +334,23 @@ func TestCodec_DecodeNested(t *testing.T) {
 		err = codec.DecodeNested(data, destination)
 		require.NoError(t, err)
 		require.Equal(t, &BigIntValue{Value: big.NewInt(-1)}, destination)
+	})
+
+	t.Run("address", func(t *testing.T) {
+		data, _ := hex.DecodeString("0139472eff6886771a982f3083da5d421f24c29181e63888228dc81ca60d69e1")
+
+		destination := &AddressValue{}
+		err := codec.DecodeNested(data, destination)
+		require.NoError(t, err)
+		require.Equal(t, &AddressValue{Value: data}, destination)
+	})
+
+	t.Run("address (bad)", func(t *testing.T) {
+		data, _ := hex.DecodeString("0139472eff6886771a982f3083da5d42")
+
+		destination := &AddressValue{}
+		err := codec.DecodeNested(data, destination)
+		require.ErrorContains(t, err, "cannot read exactly 32 bytes")
 	})
 
 	t.Run("string", func(t *testing.T) {

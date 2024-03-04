@@ -208,3 +208,37 @@ func (c *defaultCodec) decodeNestedBytes(reader io.Reader, value *BytesValue) er
 	value.Value = data
 	return nil
 }
+
+func (c *defaultCodec) encodeTopLevelAddress(writer io.Writer, value AddressValue) error {
+	err := checkPubKeyLength(value.Value)
+	if err != nil {
+		return err
+	}
+
+	_, err = writer.Write(value.Value)
+	return err
+}
+
+func (c *defaultCodec) encodeNestedAddress(writer io.Writer, value AddressValue) error {
+	return c.encodeTopLevelAddress(writer, value)
+}
+
+func (c *defaultCodec) decodeTopLevelAddress(data []byte, value *AddressValue) error {
+	err := checkPubKeyLength(data)
+	if err != nil {
+		return err
+	}
+
+	value.Value = data
+	return nil
+}
+
+func (c *defaultCodec) decodeNestedAddress(reader io.Reader, value *AddressValue) error {
+	data, err := readBytesExactly(reader, pubKeyLength)
+	if err != nil {
+		return err
+	}
+
+	value.Value = data
+	return nil
+}
