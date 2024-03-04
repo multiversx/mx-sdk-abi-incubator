@@ -2,6 +2,7 @@ package abi
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 )
 
@@ -74,7 +75,7 @@ func (c *defaultCodec) decodeNestedEnum(reader io.Reader, value *EnumValue) erro
 	for _, field := range value.Fields {
 		err := c.doDecodeNested(reader, field.Value)
 		if err != nil {
-			return err
+			return fmt.Errorf("cannot decode field '%s' of struct, because of: %w", field.Name, err)
 		}
 	}
 
