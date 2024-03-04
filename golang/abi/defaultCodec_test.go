@@ -17,6 +17,11 @@ func TestCodec_EncodeNested(t *testing.T) {
 		require.Equal(t, expected, hex.EncodeToString(encoded))
 	}
 
+	t.Run("bool", func(t *testing.T) {
+		doTest(t, BoolValue{Value: false}, "00")
+		doTest(t, BoolValue{Value: true}, "01")
+	})
+
 	t.Run("u8, i8", func(t *testing.T) {
 		doTest(t, U8Value{Value: 0x00}, "00")
 		doTest(t, U8Value{Value: 0x01}, "01")
@@ -171,6 +176,11 @@ func TestCodec_EncodeTopLevel(t *testing.T) {
 		require.Equal(t, expected, hex.EncodeToString(encoded))
 	}
 
+	t.Run("bool", func(t *testing.T) {
+		doTest(t, BoolValue{Value: false}, "")
+		doTest(t, BoolValue{Value: true}, "01")
+	})
+
 	t.Run("u8", func(t *testing.T) {
 		doTest(t, U8Value{Value: 0x00}, "")
 		doTest(t, U8Value{Value: 0x01}, "01")
@@ -255,6 +265,24 @@ func TestCodec_EncodeTopLevel(t *testing.T) {
 
 func TestCodec_DecodeNested(t *testing.T) {
 	codec := NewDefaultCodec()
+
+	t.Run("bool (true)", func(t *testing.T) {
+		data, _ := hex.DecodeString("01")
+		destination := &BoolValue{}
+
+		err := codec.DecodeNested(data, destination)
+		require.NoError(t, err)
+		require.Equal(t, &BoolValue{Value: true}, destination)
+	})
+
+	t.Run("bool (false)", func(t *testing.T) {
+		data, _ := hex.DecodeString("00")
+		destination := &BoolValue{}
+
+		err := codec.DecodeNested(data, destination)
+		require.NoError(t, err)
+		require.Equal(t, &BoolValue{Value: false}, destination)
+	})
 
 	t.Run("u8", func(t *testing.T) {
 		data, _ := hex.DecodeString("01")
@@ -509,6 +537,24 @@ func TestCodec_DecodeNested(t *testing.T) {
 
 func TestCodec_DecodeTopLevel(t *testing.T) {
 	codec := NewDefaultCodec()
+
+	t.Run("bool (true)", func(t *testing.T) {
+		data, _ := hex.DecodeString("01")
+		destination := &BoolValue{}
+
+		err := codec.DecodeTopLevel(data, destination)
+		require.NoError(t, err)
+		require.Equal(t, &BoolValue{Value: true}, destination)
+	})
+
+	t.Run("bool (false)", func(t *testing.T) {
+		data, _ := hex.DecodeString("")
+		destination := &BoolValue{}
+
+		err := codec.DecodeTopLevel(data, destination)
+		require.NoError(t, err)
+		require.Equal(t, &BoolValue{Value: false}, destination)
+	})
 
 	t.Run("u8", func(t *testing.T) {
 		data, _ := hex.DecodeString("01")

@@ -33,6 +33,8 @@ func (c *defaultCodec) EncodeNested(value any) ([]byte, error) {
 
 func (c *defaultCodec) doEncodeNested(writer io.Writer, value any) error {
 	switch value.(type) {
+	case BoolValue:
+		return c.encodeNestedBool(writer, value.(BoolValue))
 	case U8Value:
 		return c.encodeNestedNumber(writer, value.(U8Value).Value, 1)
 	case U16Value:
@@ -51,6 +53,8 @@ func (c *defaultCodec) doEncodeNested(writer io.Writer, value any) error {
 		return c.encodeNestedNumber(writer, value.(I64Value).Value, 8)
 	case BigIntValue:
 		return c.encodeNestedBigNumber(writer, value.(BigIntValue).Value)
+	case AddressValue:
+		return c.encodeNestedAddress(writer, value.(AddressValue))
 	case StringValue:
 		return c.encodeNestedString(writer, value.(StringValue))
 	case BytesValue:
@@ -80,6 +84,8 @@ func (c *defaultCodec) EncodeTopLevel(value any) ([]byte, error) {
 
 func (c *defaultCodec) doEncodeTopLevel(writer io.Writer, value any) error {
 	switch value.(type) {
+	case BoolValue:
+		return c.encodeTopLevelBool(writer, value.(BoolValue))
 	case U8Value:
 		return c.encodeTopLevelUnsignedNumber(writer, uint64(value.(U8Value).Value))
 	case U16Value:
@@ -98,6 +104,8 @@ func (c *defaultCodec) doEncodeTopLevel(writer io.Writer, value any) error {
 		return c.encodeTopLevelSignedNumber(writer, value.(I64Value).Value)
 	case BigIntValue:
 		return c.encodeTopLevelBigNumber(writer, value.(BigIntValue).Value)
+	case AddressValue:
+		return c.encodeTopLevelAddress(writer, value.(AddressValue))
 	case StructValue:
 		return c.encodeTopLevelStruct(writer, value.(StructValue))
 	case EnumValue:
@@ -119,6 +127,8 @@ func (c *defaultCodec) DecodeNested(data []byte, value any) error {
 
 func (c *defaultCodec) doDecodeNested(reader io.Reader, value any) error {
 	switch value.(type) {
+	case *BoolValue:
+		return c.decodeNestedBool(reader, value.(*BoolValue))
 	case *U8Value:
 		return c.decodeNestedNumber(reader, &value.(*U8Value).Value, 1)
 	case *U16Value:
@@ -143,6 +153,8 @@ func (c *defaultCodec) doDecodeNested(reader io.Reader, value any) error {
 
 		value.(*BigIntValue).Value = n
 		return nil
+	case *AddressValue:
+		return c.decodeNestedAddress(reader, value.(*AddressValue))
 	case *StringValue:
 		return c.decodeNestedString(reader, value.(*StringValue))
 	case *BytesValue:
@@ -171,6 +183,8 @@ func (c *defaultCodec) DecodeTopLevel(data []byte, value any) error {
 
 func (c *defaultCodec) doDecodeTopLevel(data []byte, value any) error {
 	switch value.(type) {
+	case *BoolValue:
+		return c.decodeTopLevelBool(data, value.(*BoolValue))
 	case *U8Value:
 		n, err := c.decodeTopLevelUnsignedNumber(data, math.MaxUint8)
 		if err != nil {
@@ -231,6 +245,8 @@ func (c *defaultCodec) doDecodeTopLevel(data []byte, value any) error {
 	case *BigIntValue:
 		n := c.decodeTopLevelBigNumber(data)
 		value.(*BigIntValue).Value = n
+	case *AddressValue:
+		return c.decodeTopLevelAddress(data, value.(*AddressValue))
 	case *StructValue:
 		return c.decodeTopLevelStruct(data, value.(*StructValue))
 	case *EnumValue:

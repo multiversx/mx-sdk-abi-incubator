@@ -10,6 +10,70 @@ import (
 	twos "github.com/multiversx/mx-components-big-int/twos-complement"
 )
 
+func (c *defaultCodec) encodeNestedBool(writer io.Writer, value BoolValue) error {
+	if value.Value {
+		_, err := writer.Write([]byte{trueAsByte})
+		return err
+	}
+
+	_, err := writer.Write([]byte{falseAsByte})
+	return err
+}
+
+func (c *defaultCodec) decodeNestedBool(reader io.Reader, value *BoolValue) error {
+	data, err := readBytesExactly(reader, 1)
+	if err != nil {
+		return err
+	}
+
+	value.Value, err = c.byteToBool(data[0])
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *defaultCodec) encodeTopLevelBool(writer io.Writer, value BoolValue) error {
+	if !value.Value {
+		// For "false", write nothing.
+		return nil
+	}
+
+	_, err := writer.Write([]byte{trueAsByte})
+	return err
+}
+
+func (c *defaultCodec) decodeTopLevelBool(data []byte, value *BoolValue) error {
+	if len(data) == 0 {
+		value.Value = false
+		return nil
+	}
+
+	if len(data) == 1 {
+		boolValue, err := c.byteToBool(data[0])
+		if err != nil {
+			return err
+		}
+
+		value.Value = boolValue
+		return nil
+	}
+
+	return fmt.Errorf("unexpected boolean value: %v", data)
+}
+
+func (c *defaultCodec) byteToBool(data uint8) (bool, error) {
+	switch data {
+	case trueAsByte:
+		return true, nil
+	case falseAsByte:
+		return false, nil
+	default:
+		return false, fmt.Errorf("unexpected boolean value: %d", data)
+	}
+}
+
 func (c *defaultCodec) encodeNestedNumber(writer io.Writer, value any, numBytes int) error {
 	buffer := new(bytes.Buffer)
 
@@ -209,6 +273,10 @@ func (c *defaultCodec) decodeNestedBytes(reader io.Reader, value *BytesValue) er
 	return nil
 }
 
+func (c *defaultCodec) encodeNestedAddress(writer io.Writer, value AddressValue) error {
+	return c.encodeTopLevelAddress(writer, value)
+}
+
 func (c *defaultCodec) encodeTopLevelAddress(writer io.Writer, value AddressValue) error {
 	err := checkPubKeyLength(value.Value)
 	if err != nil {
@@ -219,12 +287,8 @@ func (c *defaultCodec) encodeTopLevelAddress(writer io.Writer, value AddressValu
 	return err
 }
 
-func (c *defaultCodec) encodeNestedAddress(writer io.Writer, value AddressValue) error {
-	return c.encodeTopLevelAddress(writer, value)
-}
-
-func (c *defaultCodec) decodeTopLevelAddress(data []byte, value *AddressValue) error {
-	err := checkPubKeyLength(data)
+func (c *defaultCodec) decodeNestedAddress(reader io.Reader, value *AddressValue) error {
+	data, err := readBytesExactly(reader, pubKeyLength)
 	if err != nil {
 		return err
 	}
@@ -233,8 +297,8 @@ func (c *defaultCodec) decodeTopLevelAddress(data []byte, value *AddressValue) e
 	return nil
 }
 
-func (c *defaultCodec) decodeNestedAddress(reader io.Reader, value *AddressValue) error {
-	data, err := readBytesExactly(reader, pubKeyLength)
+func (c *defaultCodec) decodeTopLevelAddress(data []byte, value *AddressValue) error {
+	err := checkPubKeyLength(data)
 	if err != nil {
 		return err
 	}
