@@ -1,0 +1,30 @@
+{
+  "name": "@multiversx/sdk-abi",
+  "version": "0.1.0",
+  "description": "",
+  "main": "out/index.js",
+  "types": "out/index.d.js",
+  "files": [
+    "out/**/*"
+  ],
+  "scripts": {
+    "test": "mocha",
+    "compile": "tsc -p tsconfig.json",
+    "pretest": "npm run compile",
+    "prepare": "npm run compile"
+  },
+  "author": "MultiversX",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/assert": "1.4.6",
+    "@types/chai": "4.2.11",
+    "@types/mocha": "9.1.0",
+    "@types/node": "13.13.2",
+    "assert": "2.0.0",
+    "chai": "4.2.0",
+    "mocha": "9.2.2",
+    "ts-node": "9.1.1",
+    "typescript": "4.1.2"
+  }
+}
