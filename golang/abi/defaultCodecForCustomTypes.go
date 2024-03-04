@@ -11,7 +11,7 @@ func (c *defaultCodec) encodeNestedStruct(writer io.Writer, value StructValue) e
 	for _, field := range value.Fields {
 		err := c.doEncodeNested(writer, field.Value)
 		if err != nil {
-			return err
+			return fmt.Errorf("cannot encode field '%s' of struct, because of: %w", field.Name, err)
 		}
 	}
 
@@ -26,7 +26,7 @@ func (c *defaultCodec) decodeNestedStruct(reader io.Reader, value *StructValue) 
 	for _, field := range value.Fields {
 		err := c.doDecodeNested(reader, field.Value)
 		if err != nil {
-			return err
+			return fmt.Errorf("cannot decode field '%s' of struct, because of: %w", field.Name, err)
 		}
 	}
 
@@ -47,7 +47,7 @@ func (c *defaultCodec) encodeNestedEnum(writer io.Writer, value EnumValue) error
 	for _, field := range value.Fields {
 		err := c.doEncodeNested(writer, field.Value)
 		if err != nil {
-			return err
+			return fmt.Errorf("cannot encode field '%s' of enum, because of: %w", field.Name, err)
 		}
 	}
 
@@ -75,7 +75,7 @@ func (c *defaultCodec) decodeNestedEnum(reader io.Reader, value *EnumValue) erro
 	for _, field := range value.Fields {
 		err := c.doDecodeNested(reader, field.Value)
 		if err != nil {
-			return fmt.Errorf("cannot decode field '%s' of struct, because of: %w", field.Name, err)
+			return fmt.Errorf("cannot decode field '%s' of enum, because of: %w", field.Name, err)
 		}
 	}
 
